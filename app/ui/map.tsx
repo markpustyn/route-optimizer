@@ -51,6 +51,36 @@ type GoogleInfoWindow = {
   }) => void;
 };
 
+type GoogleLatLng = {
+  lat: () => number;
+  lng: () => number;
+};
+
+type GooglePlace = {
+  formattedAddress?: string | null;
+  location?: GoogleLatLng | null;
+  fetchFields: (options: {
+    fields: string[];
+  }) => Promise<void>;
+};
+
+type GooglePlacePrediction = {
+  toPlace: () => GooglePlace;
+};
+
+type GooglePlaceSelectEvent = Event & {
+  placePrediction: GooglePlacePrediction;
+};
+
+type GooglePlaceAutocompleteElement = HTMLElement & {
+  includedRegionCodes: string[];
+  locationBias: {
+    center: MapPosition;
+    radius: number;
+  } | null;
+  placeholder: string;
+};
+
 type AddressComponent = {
   long_name: string;
   short_name: string;
@@ -101,6 +131,9 @@ declare global {
             scale?: number;
           }) => HTMLElement;
         };
+        places: {
+          PlaceAutocompleteElement: new () => GooglePlaceAutocompleteElement;
+        };
       };
     };
   }
@@ -111,7 +144,7 @@ const defaultLocation: MapPosition = {
   lng: -121.4944,
 };
 
-const searchRadiusMiles = 10;
+const searchRadiusMiles = 5;
 
 function formatGateCode(gateCode: string | null) {
   if (!gateCode) return "Unknown";
@@ -124,6 +157,9 @@ export default function Map() {
   const map = useRef<GoogleMap | null>(null);
   const markers = useRef<GoogleAdvancedMarker[]>([]);
   const infoWindow = useRef<GoogleInfoWindow | null>(null);
+  const autocompleteContainer = useRef<HTMLDivElement>(null);
+  const placeAutocomplete =
+    useRef<GooglePlaceAutocompleteElement | null>(null);
 
   const [location, setLocation] = useState<Location | null>(null);
   const [isAdding, setIsAdding] = useState(false);
@@ -264,6 +300,90 @@ export default function Map() {
     map.current.panTo(center);
     map.current.setZoom(location ? 15 : 11);
   }, [mapLoaded, location]);
+
+  useEffect(() => {
+    if (!mapLoaded || !autocompleteContainer.current) return;
+
+    const container = autocompleteContainer.current;
+    const autocomplete =
+      new window.google.maps.places.PlaceAutocompleteElement();
+
+    autocomplete.placeholder = "Search an address";
+    autocomplete.includedRegionCodes = ["us"];
+    autocomplete.style.width = "100%";
+    autocomplete.style.height = "100%";
+    autocomplete.style.border = "0";
+    autocomplete.style.borderRadius = "9999px";
+    autocomplete.style.backgroundColor = "white";
+    autocomplete.style.colorScheme = "light";
+    autocomplete.style.fontSize = "14px";
+    autocomplete.locationBias = {
+      center: defaultLocation,
+      radius: 50000,
+    };
+
+    const handlePlaceSelect = async (event: Event) => {
+      const { placePrediction } = event as GooglePlaceSelectEvent;
+      const place = placePrediction.toPlace();
+
+      try {
+        await place.fetchFields({
+          fields: ["formattedAddress", "location"],
+        });
+
+        if (!place.location) {
+          setStatus("Unable to find that address");
+          return;
+        }
+
+        const searchedLocation: Location = {
+          latitude: place.location.lat(),
+          longitude: place.location.lng(),
+        };
+
+        setIsAdding(false);
+        setLocation(searchedLocation);
+        setAddress(place.formattedAddress ?? "");
+        setStatus("Showing communities near the searched address");
+
+        map.current?.panTo({
+          lat: searchedLocation.latitude,
+          lng: searchedLocation.longitude,
+        });
+        map.current?.setZoom(15);
+      } catch (error) {
+        console.error("Unable to select address:", error);
+        setStatus("Unable to find that address");
+      }
+    };
+
+    autocomplete.addEventListener("gmp-select", handlePlaceSelect);
+    container.replaceChildren(autocomplete);
+    placeAutocomplete.current = autocomplete;
+
+    return () => {
+      autocomplete.removeEventListener(
+        "gmp-select",
+        handlePlaceSelect,
+      );
+      container.replaceChildren();
+      placeAutocomplete.current = null;
+    };
+  }, [mapLoaded]);
+
+  useEffect(() => {
+    if (!placeAutocomplete.current) return;
+
+    placeAutocomplete.current.locationBias = {
+      center: location
+        ? {
+            lat: location.latitude,
+            lng: location.longitude,
+          }
+        : defaultLocation,
+      radius: 50000,
+    };
+  }, [location, mapLoaded]);
 
   useEffect(() => {
     if (!mapLoaded || !map.current) return;
@@ -418,35 +538,40 @@ export default function Map() {
   return (
     <main className="relative h-screen w-screen overflow-hidden">
       <Script
-        src={`https://maps.googleapis.com/maps/api/js?key=${process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY}&v=weekly&libraries=marker`}
+        src={`https://maps.googleapis.com/maps/api/js?key=${process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY}&v=weekly&libraries=marker,places`}
         strategy="afterInteractive"
         onReady={() => setMapLoaded(true)}
       />
+            <div ref={mapElement} className="absolute inset-0" />
 
-      <div ref={mapElement} className="absolute inset-0" />
+            <div className="absolute left-1/2 top-4 z-10 h-12 w-[calc(100%-9rem)] max-w-md -translate-x-1/2 rounded-full bg-white shadow-lg">
+              <div
+                ref={autocompleteContainer}
+                className="h-full w-full"
+              />
+            </div>
 
-      <button
-        type="button"
-        onClick={getLocation}
-        aria-label="Use my location"
-        title="Use my location"
-        className="absolute right-4 top-4 z-10 flex h-12 w-12 items-center justify-center rounded-full bg-white text-2xl text-[#581C87] shadow-lg transition hover:bg-slate-100"
-      >
-        <MdMyLocation />
-      </button>
+            <button
+            type="button"
+            onClick={getLocation}
+            aria-label="Use my location"
+            title="Use my location"
+            className="absolute right-4 top-4 z-10 flex h-12 w-12 items-center justify-center rounded-full bg-white text-2xl text-[#581C87] shadow-lg transition hover:bg-slate-100"
+            >
+            <MdMyLocation />
+            </button>
 
-      <button
-        type="button"
-         onClick={() => setIsAdding(true)}
-        aria-label="Add a gate code"
-        title="Add a gate code"
-        className="absolute left-4 top-4 z-10 flex h-12 w-12 items-center justify-center rounded-full bg-white text-2xl text-[#581C87] shadow-lg transition hover:bg-slate-100"
-      >
-        <IoMdAddCircleOutline />
-      </button>
-
+            <button
+            type="button"
+            onClick={() => setIsAdding(true)}
+            aria-label="Add a gate code"
+            title="Add a gate code"
+            className="absolute left-4 top-4 z-10 flex h-12 w-12 items-center justify-center rounded-full bg-white text-2xl text-[#581C87] shadow-lg transition hover:bg-slate-100"
+            >
+            <IoMdAddCircleOutline />
+            </button>
       <div className="pointer-events-none absolute inset-0 flex items-end justify-center">
-        <div className="pointer-events-auto max-h-[65vh] w-full max-w-lg overflow-y-auto bg-white/95 p-8 text-center shadow-2xl backdrop-blur md:rounded-2xl">
+        <div className="pointer-events-auto h-96 w-full max-w-lg overflow-y-auto bg-white/95 p-4 text-center shadow-2xl backdrop-blur md:rounded-2xl">
           {isAdding ? (
             <div>
                 <h1 className="text-2xl font-semibold text-slate-950"> Add a Gate Code</h1>
@@ -461,19 +586,8 @@ export default function Map() {
             </div>
           ) : (
             <>
-              <h1 className="text-2xl font-semibold text-slate-950">
-                Nearby Communities
-              </h1>
 
-              <p className="mt-2 text-sm text-slate-600">
-                {address || status}
-              </p>
-
-              <p className="mt-1 text-xs text-slate-500">
-                Searching within {searchRadiusMiles} miles
-              </p>
-
-              <div className="mt-6 space-y-3 text-left">
+              <div className="space-y-3 text-left">
                 {codesLoading && (
                   <p className="text-center text-sm text-slate-500">
                     Loading nearby gate codes...
@@ -529,7 +643,7 @@ export default function Map() {
                         </div>
 
                         <span className="shrink-0 rounded-lg bg-[#F3E8FF] px-3 py-1 text-sm font-bold text-[#581C87]">
-                            #{code.gateCode}
+                            {formatGateCode(code.gateCode)}
                         </span>
                         </div>
                     </div>
