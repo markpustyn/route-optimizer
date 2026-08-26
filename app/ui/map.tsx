@@ -109,6 +109,7 @@ declare global {
           options: {
             center: MapPosition;
             zoom: number;
+            gestureHandling: "greedy";
             disableDefaultUI: boolean;
             zoomControl: boolean;
             mapId: string;
@@ -270,36 +271,40 @@ export default function Map() {
     void fetchCodes(location);
   }, [location, fetchCodes]);
 
-  useEffect(() => {
-    if (!mapLoaded || !mapElement.current) return;
+useEffect(() => {
+  if (
+    !mapLoaded ||
+    !mapElement.current ||
+    !window.google?.maps
+  ) {
+    return;
+  }
 
-    const center: MapPosition = location
-      ? {
-          lat: location.latitude,
-          lng: location.longitude,
-        }
-      : defaultLocation;
+  const center: MapPosition = location
+    ? {
+        lat: location.latitude,
+        lng: location.longitude,
+      }
+    : defaultLocation;
 
-    if (!map.current) {
-      map.current = new window.google.maps.Map(
-        mapElement.current,
-        {
-          center,
-          zoom: location ? 15 : 11,
-          disableDefaultUI: true,
-          zoomControl: true,
-          mapId:
-            process.env.NEXT_PUBLIC_GOOGLE_MAPS_MAP_ID ??
-            "DEMO_MAP_ID",
-        },
-      );
+  const mapInstance =
+    map.current ??
+    new window.google.maps.Map(mapElement.current, {
+      center,
+      zoom: location ? 15 : 11,
+      gestureHandling: "greedy",
+      disableDefaultUI: true,
+      zoomControl: true,
+      mapId:
+        process.env.NEXT_PUBLIC_GOOGLE_MAPS_MAP_ID ??
+        "DEMO_MAP_ID",
+    });
 
-      return;
-    }
+  map.current = mapInstance;
 
-    map.current.panTo(center);
-    map.current.setZoom(location ? 15 : 11);
-  }, [mapLoaded, location]);
+  mapInstance.panTo(center);
+  mapInstance.setZoom(location ? 15 : 11);
+}, [mapLoaded, location]);
 
   useEffect(() => {
     if (!mapLoaded || !autocompleteContainer.current) return;
@@ -423,6 +428,7 @@ export default function Map() {
             lat: latitude,
             lng: longitude,
           },
+          
           title: `${code.street ?? "Community"} gate code ${formattedGateCode}`,
           gmpClickable: true,
         });
