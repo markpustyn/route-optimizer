@@ -187,7 +187,6 @@ export async function GET(request: Request) {
           isNotNull(codes.longitude),
           sql`${codes.latitude} <> ''`,
           sql`${codes.longitude} <> ''`,
-          sql`${distance} <= ${radius}`,
         ),
       )
       .orderBy(distance);

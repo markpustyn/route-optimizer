@@ -225,6 +225,7 @@ export default function Map() {
         radius: searchRadiusMiles.toString(),
       });
 
+
       try {
         const response = await fetch(`/api/codes?${params}`);
 
@@ -235,6 +236,7 @@ export default function Map() {
         const data = (await response.json()) as {
           codes: GateCode[];
         };
+
 
         setCodes(data.codes ?? []);
       } catch {
@@ -541,6 +543,10 @@ useEffect(() => {
       });
   }, [mapLoaded, location]);
 
+const visibleCodes = codes
+        .filter((code) => Number(code.distance) <= 2)
+        .slice(0, 2);
+
   return (
     <main className="relative h-screen w-screen overflow-hidden">
       <Script
@@ -621,7 +627,7 @@ useEffect(() => {
                   </p>
                 )}
 
-                    {codes.map((code) => (
+                    {visibleCodes.map((code) => (
                     <div
                         key={code.id}
                         className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm"
