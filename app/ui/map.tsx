@@ -632,6 +632,11 @@ const active =
                     Select your location to find nearby gate codes.
                   </p>
                 )}
+                {!visibleCodes.length && location && (
+                  <p className="text-center text-sm text-slate-500">
+                    No gate codes found nearby.
+                  </p>
+                )}
 
                     {visibleCodes.map((code) => (
                     <div
