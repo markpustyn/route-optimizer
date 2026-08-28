@@ -551,7 +551,7 @@ const visibleCodes = codes
 
 const active =
   visibleCodes.length > 0 &&
-  Number(visibleCodes[0].distance) <= 0.2;
+  Number(visibleCodes[0].distance) <= 0.1;
 
   return (
     <main className="relative h-screen w-screen overflow-hidden">
