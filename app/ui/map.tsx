@@ -179,6 +179,8 @@ export default function Map() {
   const [codesLoading, setCodesLoading] = useState(false);
   const [codesError, setCodesError] = useState("");
 
+
+
   const getLocation = useCallback(() => {
     setIsAdding(false);
     if (!navigator.geolocation) {
@@ -547,6 +549,10 @@ const visibleCodes = codes
         .filter((code) => Number(code.distance) <= 2)
         .slice(0, 2);
 
+const active =
+  visibleCodes.length > 0 &&
+  Number(visibleCodes[0].distance) <= 0.2;
+
   return (
     <main className="relative h-screen w-screen overflow-hidden">
       <Script
@@ -630,7 +636,7 @@ const visibleCodes = codes
                     {visibleCodes.map((code) => (
                     <div
                         key={code.id}
-                        className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm"
+                        className={`rounded-xl border border-slate-200 bg-white p-4 shadow-sm ${active ? 'ring-2 ring-blue-500' : ''}`}
                     >
                         <div className="flex items-center justify-between gap-4">
                         <div className="flex min-w-0 items-center gap-3">
@@ -649,7 +655,7 @@ const visibleCodes = codes
                             </p>
 
                             <p className="mt-2 text-xs font-medium text-slate-400">
-                                {Number(code.distance).toFixed(2)} miles away
+                                {active ? 'Gate Code Found!' : `${Number(code.distance).toFixed(2)} miles away`}
                             </p>
                             </div>
                         </div>
