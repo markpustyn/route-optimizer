@@ -587,7 +587,7 @@ useEffect(() => {
   }, [mapLoaded, location]);
 
 const visibleCodes = codes
-        .filter((code) => Number(code.distance) <= 2)
+        .filter((code) => Number(code.distance) <= 1)
         .slice(0, 2);
 
 const active =
