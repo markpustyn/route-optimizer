@@ -7,7 +7,18 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { MdMyLocation } from "react-icons/md";
 import { IoMdAddCircleOutline } from "react-icons/io";
 import { BsHouseDoor } from "react-icons/bs";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog"
+
 import Form from "./form";
+import { Button } from "@/components/ui/button";
+import { toast } from "sonner";
 
 type Location = {
   latitude: number;
@@ -145,7 +156,7 @@ const defaultLocation: MapPosition = {
   lng: -121.4944,
 };
 
-const searchRadiusMiles = 5;
+const searchRadiusMiles = 1;
 
 function formatGateCode(gateCode: string | null) {
   if (!gateCode) return "Unknown";
@@ -178,8 +189,38 @@ export default function Map() {
   const [codes, setCodes] = useState<GateCode[]>([]);
   const [codesLoading, setCodesLoading] = useState(false);
   const [codesError, setCodesError] = useState("");
+  const [openPrompt, setOpenPrompt] = useState(false);
+  const [showSuccess, setShowSuccess] = useState(false);
+  const [successMessage, setSuccessMessage] = useState("");
 
+  const createRating = async (codeId: number, works: string, comment?: string) => {
+   
+    try {
+      const response = await fetch("/api/rating", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          codeId,
+          works,
+          comment,
+        }),
+      });
 
+      if (!response.ok) {
+        throw new Error("Unable to submit rating.");
+      }
+
+      const data = await response.json();
+      toast.success("Thank you for your feedback!");
+      setOpenPrompt(false);
+      return data;
+    } catch (error) {
+      console.error("Error submitting rating:", error);
+      throw error;
+    }
+  };
 
   const getLocation = useCallback(() => {
     setIsAdding(false);
@@ -562,6 +603,40 @@ const active =
       />
             <div ref={mapElement} className="absolute inset-0" />
 
+          <Dialog open={openPrompt} onOpenChange={setOpenPrompt}>
+            <DialogContent className="w-[calc(100%-2rem)] max-w-sm rounded-2xl border-0 bg-white p-4 shadow-2xl">
+              <DialogHeader className="items-center text-center">
+                <div className="mb-3 flex h-14 w-14 items-center justify-center rounded-full bg-[#F3E8FF]">
+                  <BsHouseDoor
+                    size={28}
+                    className="text-[#581C87]"
+                  />
+                </div>
+
+                <DialogTitle className="text-xl font-bold text-slate-950">
+                  Does this gate code work?
+                </DialogTitle>
+              </DialogHeader>
+
+              <div className="mt-2 flex flex-col gap-1.5">
+                <Button
+                  onClick={() => createRating(visibleCodes[0].id, "YES")}
+                  className="h-11 w-full rounded-xl bg-[#581C87] font-semibold text-white hover:bg-[#4a176f]"
+                >
+                  Yes, it works
+                </Button>
+
+                <Button
+                  variant="outline"
+                  onClick={() => createRating(visibleCodes[0].id, "NO")}
+                  className="h-11 w-full rounded-xl border-slate-200 font-semibold text-slate-700 hover:bg-slate-50"
+                >
+                  No, it does not
+                </Button>
+              </div>
+            </DialogContent>
+          </Dialog>
+
             <div className="absolute left-1/2 top-4 z-10 h-12 w-[calc(100%-9rem)] max-w-md -translate-x-1/2 rounded-full bg-white shadow-lg">
               <div
                 ref={autocompleteContainer}
@@ -642,6 +717,7 @@ const active =
                     <div
                         key={code.id}
                         className={`rounded-xl border border-slate-200 bg-white p-4 shadow-sm ${active ? 'ring-2 ring-blue-500' : ''}`}
+                        onClick={() => {setOpenPrompt(true)}}
                     >
                         <div className="flex items-center justify-between gap-4">
                         <div className="flex min-w-0 items-center gap-3">

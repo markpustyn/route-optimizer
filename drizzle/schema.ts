@@ -11,3 +11,11 @@ export const codes = pgTable('codes', {
   longitude: varchar('longitude', { length: 255 }),
   notes: text('notes'),
 });
+
+export const ratings = pgTable('ratings', {
+  id: serial('id').primaryKey(),
+  codeId: serial('code_id').references(() => codes.id),
+  works: varchar('works', { length: 255 }),
+  comment: text('comment'),
+  createdAt: varchar('created_at', { length: 255 }),
+});
