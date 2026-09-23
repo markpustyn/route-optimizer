@@ -22,11 +22,7 @@ const codeSchema = z.object({
     .refine((value) => {
       const latitude = Number(value);
 
-      return (
-        Number.isFinite(latitude) &&
-        latitude >= -90 &&
-        latitude <= 90
-      );
+      return Number.isFinite(latitude) && latitude >= -90 && latitude <= 90;
     }),
   longitude: z
     .string()
@@ -35,9 +31,7 @@ const codeSchema = z.object({
       const longitude = Number(value);
 
       return (
-        Number.isFinite(longitude) &&
-        longitude >= -180 &&
-        longitude <= 180
+        Number.isFinite(longitude) && longitude >= -180 && longitude <= 180
       );
     }),
   notes: z.string().trim().max(1000).optional(),
@@ -131,10 +125,7 @@ export async function GET(request: Request) {
   }
 
   const radius = Math.min(
-    Math.max(
-      Number.isFinite(requestedRadius) ? requestedRadius : 10,
-      1,
-    ),
+    Math.max(Number.isFinite(requestedRadius) ? requestedRadius : 10, 1),
     100,
   );
 

@@ -58,11 +58,7 @@ const formSchema = z.object({
     .refine((value) => {
       const latitude = Number(value);
 
-      return (
-        Number.isFinite(latitude) &&
-        latitude >= -90 &&
-        latitude <= 90
-      );
+      return Number.isFinite(latitude) && latitude >= -90 && latitude <= 90;
     }, "Enter a valid latitude."),
 
   longitude: z
@@ -73,16 +69,11 @@ const formSchema = z.object({
       const longitude = Number(value);
 
       return (
-        Number.isFinite(longitude) &&
-        longitude >= -180 &&
-        longitude <= 180
+        Number.isFinite(longitude) && longitude >= -180 && longitude <= 180
       );
     }, "Enter a valid longitude."),
 
-  notes: z
-    .string()
-    .trim()
-    .max(1000, "Notes must be under 1,000 characters."),
+  notes: z.string().trim().max(1000, "Notes must be under 1,000 characters."),
 });
 
 type FormValues = z.infer<typeof formSchema>;
@@ -142,15 +133,7 @@ export default function Form({
     if (longitude !== undefined) {
       form.setValue("longitude", longitude.toString());
     }
-  }, [
-    street,
-    city,
-    state,
-    zipCode,
-    latitude,
-    longitude,
-    form,
-  ]);
+  }, [street, city, state, zipCode, latitude, longitude, form]);
 
   async function onSubmit(data: FormValues) {
     try {
@@ -175,21 +158,15 @@ export default function Form({
 
   return (
     <div className="w-full border-0 bg-transparent text-left shadow-none">
-
       <div className="px-0">
-        <form
-          id="gate-code-form"
-          onSubmit={form.handleSubmit(onSubmit)}
-        >
+        <form id="gate-code-form" onSubmit={form.handleSubmit(onSubmit)}>
           <FieldGroup>
             <Controller
               name="gateCode"
               control={form.control}
               render={({ field, fieldState }) => (
                 <Field data-invalid={fieldState.invalid}>
-                  <FieldLabel htmlFor="gate-code">
-                    Gate Code
-                  </FieldLabel>
+                  <FieldLabel htmlFor="gate-code">Gate Code</FieldLabel>
 
                   <Input
                     {...field}
@@ -211,9 +188,7 @@ export default function Form({
               control={form.control}
               render={({ field, fieldState }) => (
                 <Field data-invalid={fieldState.invalid}>
-                  <FieldLabel htmlFor="street">
-                    Street
-                  </FieldLabel>
+                  <FieldLabel htmlFor="street">Street</FieldLabel>
 
                   <Input
                     {...field}
@@ -234,9 +209,7 @@ export default function Form({
               control={form.control}
               render={({ field, fieldState }) => (
                 <Field data-invalid={fieldState.invalid}>
-                  <FieldLabel htmlFor="zip-code">
-                    ZIP Code
-                  </FieldLabel>
+                  <FieldLabel htmlFor="zip-code">ZIP Code</FieldLabel>
 
                   <Input
                     {...field}
@@ -260,11 +233,7 @@ export default function Form({
 
       <div className="px-0 pb-0">
         <Field orientation="horizontal">
-          <Button
-            type="button"
-            variant="outline"
-            onClick={() => form.reset()}
-          >
+          <Button type="button" variant="outline" onClick={() => form.reset()}>
             Reset
           </Button>
 
@@ -273,9 +242,7 @@ export default function Form({
             form="gate-code-form"
             disabled={form.formState.isSubmitting}
           >
-            {form.formState.isSubmitting
-              ? "Saving..."
-              : "Add Gate Code"}
+            {form.formState.isSubmitting ? "Saving..." : "Add Gate Code"}
           </Button>
         </Field>
       </div>

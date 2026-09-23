@@ -4,8 +4,7 @@ import "./globals.css";
 import { cn } from "@/lib/utils";
 import { Toaster } from "sonner";
 
-
-const inter = Inter({subsets:['latin'],variable:'--font-sans'});
+const inter = Inter({ subsets: ["latin"], variable: "--font-inter" });
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -18,17 +17,25 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Gate Code IO",
-  description: "Gate Code IO",
+  title: "Waypoint — Simple Route Optimizer",
+  description:
+    "Optimize a driving route for up to 24 destinations by time or distance.",
 };
 
 export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
     <html
       lang="en"
-      className={cn("h-full", "antialiased", geistSans.variable, geistMono.variable, "font-sans", inter.variable)}
+      className={cn(
+        "h-full",
+        "antialiased",
+        geistSans.variable,
+        geistMono.variable,
+        "font-sans",
+        inter.variable,
+      )}
     >
-            <head>
+      <head>
         <link rel="shortcut icon" href="/images/favicon.ico" />
         <link
           rel="apple-touch-icon"
@@ -49,8 +56,9 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
         />
         <link rel="manifest" href="/images/site.webmanifest" />
       </head>
-      <body className="min-h-full flex flex-col">{children}
-      <Toaster  position="top-center"  />
+      <body className="flex min-h-full flex-col bg-background text-foreground">
+        {children}
+        <Toaster position="top-center" />
       </body>
     </html>
   );

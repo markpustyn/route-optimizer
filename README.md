@@ -1,36 +1,35 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Waypoint
 
-## Getting Started
+A simple driving-route planner built from the existing Next.js template. Enter a start and 2–24 destinations (one full address per line), choose time or distance, and optimize. Includes an optional return to start, a route map, ordered stops, estimated totals, per-leg Google Maps navigation, and a text download. The sample fills in ten Sacramento destinations.
 
-First, run the development server:
+## Run
 
-```bash
+```sh
+npm install
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Keep the existing `.env.local` and all Supabase/Postgres settings. Database clients, schema, migrations, and existing `/api/codes` and `/api/rating` endpoints are unchanged. The planner does not require new tables or write routes to the database.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Google Maps setup
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+- Existing `NEXT_PUBLIC_GOOGLE_MAPS_API_KEY`: enable Maps JavaScript API and restrict this browser key to your website origins.
+- Add `GOOGLE_MAPS_SERVER_API_KEY` to `.env.local`: enable Routes API with billing and restrict this separate server key to Routes API (and server IPs where applicable). Never prefix the server key with `NEXT_PUBLIC_`.
+- Optional `NEXT_PUBLIC_GOOGLE_MAPS_MAP_ID`; otherwise the map uses `DEMO_MAP_ID`.
+- For compatibility, routing falls back to the existing Maps key if no server key is configured. Browser-referrer restrictions usually prevent server requests; configure the separate server key if routing reports an authorization error.
 
-## Learn More
+The server requests a road-distance/time matrix, improves the destination order using multi-start nearest-neighbor and directed 2-opt, then requests the driving route for that order. Time and distance are selectable objectives; distance means distance along Google's returned driving paths, not an exhaustive search over all roads. The algorithm is approximate and never worsens the entered order's selected matrix cost. Estimates exclude live traffic. Percentage savings compare matrix costs, while displayed totals come from the final route.
 
-To learn more about Next.js, take a look at the following resources:
+At the maximum size, each optimization requests 625 matrix elements plus one route; Google API charges and quotas apply. Stops must be connected by car. Before a public launch, configure provider quotas and deployment-level rate limits for the routing endpoint.
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+References: [Route matrix](https://developers.google.com/maps/documentation/routes/compute_route_matrix), [Compute routes](https://developers.google.com/maps/documentation/routes/reference/rest/v2/TopLevel/computeRoutes).
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+## Verify
 
-## Deploy on Vercel
+```sh
+npm test
+npm run lint
+npm run build
+```
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+Tests cover ten-stop optimization, 24-stop asymmetric costs, round trips, API validation, and a mocked Google integration. Live Google routing requires enabled APIs and valid credentials.
