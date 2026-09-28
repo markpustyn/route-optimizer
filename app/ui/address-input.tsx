@@ -57,7 +57,7 @@ export default function AddressInput({
     widget.current = autocomplete;
     autocomplete.id = id;
     autocomplete.maxlength = 300;
-    autocomplete.noInputIcon = true;
+    autocomplete.setAttribute("no-clear-button", "");
     autocomplete.includedRegionCodes = ["us"];
     autocomplete.locationBias = { center: defaultLocation, radius: 50000 };
     autocomplete.className =

@@ -5,6 +5,7 @@ import {
   ArrowRight,
   Circle,
   CirclePlus,
+  CircleX,
   EllipsisVertical,
   MapPin,
   X,
@@ -180,12 +181,12 @@ export default function SideBar({
                       type="button"
                       variant="ghost"
                       size="icon"
-                      className="mt-1"
+                      className="mt-2 ml-2"
                       disabled={busy || destinations.length <= 2}
                       aria-label={`Remove destination ${index + 1}`}
                       onClick={() => removeDestination(stop.id)}
                     >
-                      <X className="size-4" />
+                      <CircleX className="size-6"/>
                     </Button>
                   </div>
                 ))}

@@ -191,11 +191,6 @@ export default function RouteMap({
                 </li>
               ))}
             </ol>
-            <p className="mt-3 text-[10px] leading-relaxed text-muted-foreground">
-              *Compared with your entered order using road estimates. No live
-              traffic. Optimized stop order is approximate, not a guaranteed
-              global minimum.
-            </p>
             {result.route.warnings?.map((w) => (
               <p
                 className="mt-3 text-[10px] leading-relaxed text-muted-foreground"
