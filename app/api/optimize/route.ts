@@ -62,7 +62,9 @@ export async function POST(request: Request) {
     ) ||
     input.start.length > 300 ||
     !["time", "distance"].includes(input.metric) ||
-    typeof input.roundTrip !== "boolean"
+    typeof input.roundTrip !== "boolean" ||
+    (input.reverseDirection !== undefined &&
+      typeof input.reverseDirection !== "boolean")
   ) {
     return NextResponse.json(
       {
@@ -125,7 +127,11 @@ export async function POST(request: Request) {
       throw new Error(
         "Some destinations could not be connected by car. Check the addresses and keep stops within a connected driving region.",
       );
-    const order = optimizeOrder(matrix, input.roundTrip);
+    const optimizedOrder = optimizeOrder(matrix, input.roundTrip);
+    // Keep the origin fixed and recalculate driving directions for reversed stops.
+    const order = input.reverseDirection
+      ? [optimizedOrder[0], ...optimizedOrder.slice(1).reverse()]
+      : optimizedOrder;
     const routeOrder = input.roundTrip ? [...order, 0] : order;
     const ordered = routeOrder.map((i) => ({ address: addresses[i] }));
     const result = await googleRequest(

@@ -6,6 +6,7 @@ export type RouteRequest = {
   destinations: string[];
   metric: Metric;
   roundTrip: boolean;
+  reverseDirection?: boolean;
 };
 export type SelectedPlace = { address: string; position: MapPosition };
 export const defaultLocation: MapPosition = { lat: 38.5816, lng: -121.4944 };

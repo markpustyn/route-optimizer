@@ -17,7 +17,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Waypoint — Simple Route Optimizer",
+  title: "Stop Nest — Simple Route Optimizer",
   description:
     "Optimize a driving route for up to 24 destinations by time or distance.",
 };

@@ -8,7 +8,6 @@ import {
   CircleX,
   EllipsisVertical,
   MapPin,
-  X,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
@@ -31,17 +30,15 @@ type SidebarProps = {
 type Destination = { id: number; address: string };
 
 const sample = [
-  "California State Capitol",
-  "Crocker Art Museum",
-  "Sutter's Fort",
-  "McKinley Park",
-  "Sacramento Zoo",
-  "California State Railroad Museum",
-  "Tower Theatre",
-  "Southside Park",
-  "William Land Park",
-  "Sacramento History Museum",
-].map((place) => `${place}, Sacramento, CA`);
+  "Golden Gate Bridge",
+  "Palace of Fine Arts",
+  "Fisherman's Wharf",
+  "Coit Tower",
+  "Ferry Building",
+  "Chinatown",
+  "Painted Ladies",
+  "Golden Gate Park",
+].map((place) => `${place}, San Francisco, CA`);
 
 export default function SideBar({
   mapLoaded,
@@ -58,6 +55,7 @@ export default function SideBar({
     { id: 1, address: "" },
   ]);
   const [roundTrip, setRoundTrip] = useState(true);
+  const [reverseDirection, setReverseDirection] = useState(false);
   const nextId = useRef(2);
   const canOptimize =
     start.trim().length > 0 &&
@@ -92,27 +90,28 @@ export default function SideBar({
       destinations: destinations.map((stop) => stop.address.trim()),
       metric: "time",
       roundTrip,
+      reverseDirection,
     });
   }
 
   function openInGoogleMaps() {
     if (!result || result.addresses.length < 2) return;
 
-    const addresses = result.addresses
+    const addresses = result.addresses;
     const batchSize = 10;
 
-
-    for(let i = 0; i < addresses.length; i += batchSize) {
+    for (let i = 0; i < addresses.length; i += batchSize) {
       const map = addresses.slice(i, i + batchSize);
       const path = map
-        .map((address) => encodeURIComponent(address.trim()).replace(/%20/g, "+"))
+        .map((address) =>
+          encodeURIComponent(address.trim()).replace(/%20/g, "+"),
+        )
         .join("/");
       window.open(
         `https://www.google.com/maps/dir/${path}/`,
         "_blank",
         "noopener,noreferrer",
       );
-
     }
   }
 
@@ -186,7 +185,7 @@ export default function SideBar({
                       aria-label={`Remove destination ${index + 1}`}
                       onClick={() => removeDestination(stop.id)}
                     >
-                      <CircleX className="size-6"/>
+                      <CircleX className="size-6" />
                     </Button>
                   </div>
                 ))}
@@ -207,7 +206,7 @@ export default function SideBar({
                 className="text-xs"
                 disabled={busy}
                 onClick={() => {
-                  setStart("Sacramento International Airport, CA");
+                  setStart("San Francisco City Hall, San Francisco, CA");
                   setDestinations(
                     sample.map((address) => ({
                       id: nextId.current++,
@@ -217,7 +216,7 @@ export default function SideBar({
                   onChange();
                 }}
               >
-                Try 10 stops <ArrowRight className="size-3" />
+                Try 8 stops <ArrowRight className="size-3" />
               </Button>
             </div>
 
@@ -242,23 +241,23 @@ export default function SideBar({
               </span>
             </Label>
             <Label
-              // htmlFor="round-trip"
+              htmlFor="reverse-direction"
               className="flex cursor-pointer items-center gap-3 text-xs"
             >
               <Checkbox
-                id="round-trip"
-                // checked={roundTrip}
-                // disabled={busy}
-                // onCheckedChange={(checked) => {
-                //   setRoundTrip(checked);
-                //   onChange();
-                // }}
+                id="reverse-direction"
+                checked={reverseDirection}
+                disabled={busy}
+                onCheckedChange={(checked) => {
+                  setReverseDirection(checked);
+                  onChange();
+                }}
               />
               <span>
                 Go opposite direction
                 <small className="mt-1 block text-[10px] font-normal text-muted-foreground">
-                  Optimize the route to go in the opposite direction of the
-                  original route
+                  Visit optimized stops in reverse order from the same starting
+                  point. Click Optimize route to apply.
                 </small>
               </span>
             </Label>
