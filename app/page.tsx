@@ -10,6 +10,7 @@ import {
   Sparkles,
 } from "lucide-react";
 import Image from "next/image";
+import { ContactDialog } from "@/components/contact-dialog";
 export const metadata: Metadata = {
   title: "StopNest.com — Route Planner",
   description:
@@ -285,12 +286,7 @@ export default function Page() {
             <MapPin aria-hidden="true" className="size-5 text-blue-600" />
             StopNest.com
           </Link>
-          <Link
-            href="/map"
-            className="inline-flex min-h-10 items-center gap-2 text-sm font-medium text-slate-600 hover:text-blue-600"
-          >
-            Contact <ArrowRight aria-hidden="true" className="size-4" />
-          </Link>
+          <ContactDialog />
         </div>
       </footer>
     </div>

@@ -33,3 +33,13 @@ npm run build
 ```
 
 Tests cover ten-stop optimization, 24-stop asymmetric costs, round trips, API validation, and a mocked Google integration. Live Google routing requires enabled APIs and valid credentials.
+
+## Contact form
+
+The footer Contact button opens the shared UI dialog and submits to Formspree. Add your form ID to `.env.local`:
+
+```dotenv
+NEXT_PUBLIC_FORMSPREE_FORM_ID=your_form_id
+```
+
+Use the ID from your Formspree integration endpoint (`https://formspree.io/f/your_form_id`). Restart the dev server after adding it; for production, set the variable in your hosting environment and rebuild. Until configured, the dialog opens but sending is disabled.
