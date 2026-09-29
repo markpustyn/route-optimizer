@@ -3,6 +3,7 @@ import { Geist, Geist_Mono, Inter } from "next/font/google";
 import "./globals.css";
 import { cn } from "@/lib/utils";
 import { Toaster } from "sonner";
+import { Analytics } from "@vercel/analytics/next"
 
 const inter = Inter({ subsets: ["latin"], variable: "--font-inter" });
 
@@ -57,6 +58,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
         <link rel="manifest" href="/images/site.webmanifest" />
       </head>
       <body className="flex min-h-full flex-col bg-background text-foreground">
+         <Analytics />
         {children}
         <Toaster position="top-center" />
       </body>
