@@ -1,17 +1,15 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import {
-  ArrowDown,
   ArrowRight,
   Check,
   Download,
-  ImageIcon,
   MapPin,
   Navigation,
   Route,
   Sparkles,
 } from "lucide-react";
-
+import Image from "next/image";
 export const metadata: Metadata = {
   title: "StopNest.com — Route Planner",
   description:
@@ -83,11 +81,9 @@ export default function Page() {
             className="flex items-center gap-2.5 text-2xl font-bold tracking-tight"
           >
             <div className="flex size-9 items-center justify-center text-white">
-              <MapPin aria-hidden="true" className="size-8" color="#2563eb"/>
+              <MapPin aria-hidden="true" className="size-8" color="#2563eb" />
             </div>
-            <span>
-              StopNest.com
-            </span>
+            <span>StopNest.com</span>
           </Link>
           <Link
             href="/map"
@@ -99,16 +95,12 @@ export default function Page() {
       </header>
 
       <main id="main">
-        <section className="relative overflow-hidden px-6 pb-16 pt-16 sm:pt-24 lg:px-10 lg:pb-20">
-          <div
-            aria-hidden="true"
-            className="pointer-events-none absolute -right-48 top-0 size-[600px] rounded-full bg-blue-50/80 blur-3xl"
-          />
+        <section className="relative mx-auto w-full max-w-7xl overflow-hidden px-6 pb-16 pt-16 sm:pt-24 lg:px-10 lg:pb-20">
           <div className="relative mx-auto max-w-7xl">
             <div className="max-w-3xl">
               <span className="inline-flex items-center gap-2 rounded-full border border-blue-100 bg-blue-50 px-3.5 py-2 text-xs font-semibold text-blue-600">
-                <span className="size-1.5 rounded-full bg-blue-600" />
-                A little less planning. A lot more going.
+                <span className="size-1.5 rounded-full bg-blue-600" />A little
+                less planning. A lot more going.
               </span>
 
               <h1 className="mt-7 text-5xl font-semibold leading-[1.08] tracking-[-0.055em] sm:text-6xl lg:text-7xl">
@@ -118,8 +110,9 @@ export default function Page() {
               </h1>
 
               <p className="mt-6 max-w-2xl text-lg leading-8 text-slate-600">
-                Simplify your route planning in seconds. Add your destinations, explore
-                24 optimized routes, and choose the best way to get where you need to go.
+                Simplify your route planning in seconds. Add your destinations,
+                explore 24 optimized routes, and choose the best way to get
+                where you need to go.
               </p>
 
               <div className="mt-8">
@@ -134,37 +127,16 @@ export default function Page() {
                 Completely free. No subscription. No credit card.
               </p>
             </div>
-            <div
-              id="preview"
-              className="mt-14 rounded-2xl border border-slate-200 bg-white p-2 shadow-2xl shadow-slate-200/60 sm:mt-16 sm:rounded-3xl sm:p-3"
-            >
-              <div className="flex items-center justify-between gap-3 rounded-t-xl border-b border-slate-200 bg-slate-50 px-4 py-3">
-                <div aria-hidden="true" className="flex gap-1.5">
-                  <span className="size-2 rounded-full bg-slate-300" />
-                  <span className="size-2 rounded-full bg-slate-300" />
-                  <span className="size-2 rounded-full bg-slate-300" />
-                </div>
-                <span className="text-xs font-medium text-slate-500">
-                  Your next great route starts here
-                </span>
-                <Route aria-hidden="true" className="size-4 text-blue-600" />
-              </div>
-              {/* Replace this placeholder with a screenshot of the software when ready. */}
-              <div
-                role="img"
-                aria-label="Placeholder for a future StopNest software demonstration image"
-                className="flex min-h-64 flex-col items-center justify-center rounded-b-xl border border-dashed border-blue-200 bg-blue-50/40 px-6 py-14 text-center sm:aspect-[2.5/1]"
-              >
-                <span className="flex size-14 items-center justify-center rounded-2xl border border-blue-100 bg-white text-blue-600 shadow-sm">
-                  <ImageIcon aria-hidden="true" className="size-6" />
-                </span>
-                <p className="mt-5 text-base font-semibold text-slate-700">
-                  A closer look at StopNest
-                </p>
-                <p className="mt-2 text-sm text-slate-500">
-                  Software preview coming soon
-                </p>
-              </div>
+            <div className="relative mx-auto mt-10 aspect-[1830/980] w-full overflow-hidden rounded-lg border border-slate-200 bg-white shadow-2xl shadow-slate-200/60 sm:mt-14 sm:rounded-xl">
+              {/* Frame the screenshot inside the original transparent padding. */}
+              <Image
+                src="/demo.png"
+                alt="StopNest route planner showing optimized stops and a driving route in San Francisco"
+                width={1920}
+                height={1440}
+                sizes="(min-width: 1280px) 1260px, (min-width: 1024px) calc((100vw - 80px) * 1.05), calc((100vw - 48px) * 1.05)"
+                className="absolute -left-[2.459%] -top-[23.469%] block h-auto w-[104.918%] max-w-none"
+              />
             </div>
             <div className="mt-7 flex flex-wrap justify-center gap-x-10 gap-y-4 text-xs font-medium text-slate-500 sm:text-sm">
               {[
