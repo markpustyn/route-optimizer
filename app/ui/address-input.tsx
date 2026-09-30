@@ -1,11 +1,9 @@
 "use client";
-
-import { useEffect, useEffectEvent, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Input } from "@/components/ui/input";
 import {
   defaultLocation,
-  type GooglePlaceAutocompleteElement,
-  type GooglePlaceSelectEvent,
+  type GooglePlacePrediction,
   type SelectedPlace,
 } from "@/app/lib/types";
 
@@ -28,120 +26,185 @@ export default function AddressInput({
   onChange,
   onPlaceSelect,
 }: AddressInputProps) {
-  const container = useRef<HTMLDivElement>(null);
-  const widget = useRef<GooglePlaceAutocompleteElement | null>(null);
-  const [searchUnavailable, setSearchUnavailable] = useState(false);
+  const [focused, setFocused] = useState(false);
+  const [predictions, setPredictions] = useState<GooglePlacePrediction[]>([]);
+  const [activeIndex, setActiveIndex] = useState(-1);
   const [message, setMessage] = useState("");
-
-  // Read current props without recreating the Google widget on every keystroke.
-  const changeAddress = useEffectEvent((address: string) => {
-    if (!disabled) onChange(address);
-  });
-  const selectPlace = useEffectEvent((place: SelectedPlace) => {
-    if (disabled) return;
-    onChange(place.address);
-    onPlaceSelect?.(place);
-  });
+  const session = useRef<object | null>(null);
+  const version = useRef(0);
+  const input = useRef<HTMLInputElement>(null);
+  const list = useRef<HTMLUListElement>(null);
+  const open = focused && !disabled && predictions.length > 0;
 
   useEffect(() => {
-    if (
-      !mapLoaded ||
-      searchUnavailable ||
-      !container.current ||
-      !window.google?.maps.places
-    )
-      return;
-    const host = container.current;
-    const autocomplete =
-      new window.google.maps.places.PlaceAutocompleteElement();
-    widget.current = autocomplete;
-    autocomplete.id = id;
-    autocomplete.maxlength = 300;
-    autocomplete.setAttribute("no-clear-button", "");
-    autocomplete.includedRegionCodes = ["us"];
-    autocomplete.locationBias = { center: defaultLocation, radius: 50000 };
-    autocomplete.className =
-      "w-full rounded-lg border border-input bg-white text-sm scheme-light";
+    if (!focused || disabled || !mapLoaded || !value.trim()) return;
     let active = true;
-    let version = 0;
-
-    const handleInput = () => {
-      ++version;
-      changeAddress(autocomplete.value);
-    };
-    const handleSelect = async (event: Event) => {
-      const selection = ++version;
-      const place = (event as GooglePlaceSelectEvent).placePrediction.toPlace();
+    const requestVersion = version.current;
+    const timer = setTimeout(async () => {
       try {
-        await place.fetchFields({ fields: ["formattedAddress", "location"] });
-        if (!active || selection !== version) return;
-        if (!place.formattedAddress || !place.location) {
-          setMessage(
-            "Address details unavailable. You can enter the full address manually.",
-          );
-          return;
-        }
-        autocomplete.value = place.formattedAddress;
-        selectPlace({
-          address: place.formattedAddress,
-          position: { lat: place.location.lat(), lng: place.location.lng() },
-        });
-        setMessage("");
+        const places = window.google.maps.places;
+        session.current ??= new places.AutocompleteSessionToken();
+        const { suggestions } =
+          await places.AutocompleteSuggestion.fetchAutocompleteSuggestions({
+            input: value,
+            sessionToken: session.current,
+            includedRegionCodes: ["us"],
+            locationBias: { center: defaultLocation, radius: 50000 },
+          });
+        if (!active || requestVersion !== version.current) return;
+        const results = suggestions.flatMap((suggestion) =>
+          suggestion.placePrediction ? [suggestion.placePrediction] : [],
+        );
+        setPredictions(results);
+        setActiveIndex(-1);
+        setMessage(
+          results.length
+            ? ""
+            : "No suggestions found. You can enter the full address manually.",
+        );
       } catch {
-        if (active && selection === version)
+        if (active && requestVersion === version.current) {
+          setPredictions([]);
           setMessage(
-            "Address details unavailable. You can enter the full address manually.",
+            "Autocomplete is unavailable. Enter the full address manually.",
           );
+        }
       }
-    };
-    const handleError = () => {
-      changeAddress(autocomplete.value);
-      setSearchUnavailable(true);
-      setMessage(
-        "Autocomplete is unavailable. Enter the full address manually.",
-      );
-    };
-
-    autocomplete.addEventListener("input", handleInput);
-    autocomplete.addEventListener("change", handleInput);
-    autocomplete.addEventListener("gmp-select", handleSelect);
-    autocomplete.addEventListener("gmp-error", handleError);
-    host.replaceChildren(autocomplete);
-
+    }, 250);
     return () => {
       active = false;
-      autocomplete.removeEventListener("input", handleInput);
-      autocomplete.removeEventListener("change", handleInput);
-      autocomplete.removeEventListener("gmp-select", handleSelect);
-      autocomplete.removeEventListener("gmp-error", handleError);
-      host.replaceChildren();
-      widget.current = null;
+      clearTimeout(timer);
     };
-  }, [id, mapLoaded, searchUnavailable]);
+  }, [value, focused, disabled, mapLoaded]);
 
   useEffect(() => {
-    if (!widget.current) return;
-    if (widget.current.value !== value) widget.current.value = value;
-    widget.current.disabled = disabled;
-    widget.current.placeholder = `Search ${label.toLowerCase()}`;
-    widget.current.setAttribute("aria-label", label);
-  }, [value, disabled, label, mapLoaded, searchUnavailable]);
+    list.current?.children[activeIndex]?.scrollIntoView({ block: "nearest" });
+  }, [activeIndex]);
+  useEffect(
+    () => () => {
+      ++version.current;
+    },
+    [],
+  );
+
+  async function selectPrediction(prediction: GooglePlacePrediction) {
+    if (disabled) return;
+    setPredictions([]);
+    setFocused(false);
+    input.current?.blur();
+    const selection = ++version.current;
+    onChange(prediction.text.toString());
+    const place = prediction.toPlace();
+    session.current = null;
+    try {
+      await place.fetchFields({ fields: ["formattedAddress", "location"] });
+      if (selection !== version.current) return;
+      if (!place.formattedAddress || !place.location)
+        throw new Error("Missing address details");
+      onChange(place.formattedAddress);
+      onPlaceSelect?.({
+        address: place.formattedAddress,
+        position: { lat: place.location.lat(), lng: place.location.lng() },
+      });
+      setMessage("");
+    } catch {
+      if (selection === version.current)
+        setMessage(
+          "Address details unavailable. You can enter the full address manually.",
+        );
+    }
+  }
 
   return (
     <div className="min-w-0 flex-1">
-      <div ref={container} />
-      {(!mapLoaded || searchUnavailable) && (
-        <Input
-          id={id}
-          aria-label={label}
-          value={value}
-          maxLength={300}
-          disabled={disabled}
-          onChange={(event) => onChange(event.target.value)}
-          placeholder={`Enter ${label.toLowerCase()}`}
-          className="h-12"
-          required
-        />
+      <Input
+        ref={input}
+        id={id}
+        role="combobox"
+        aria-label={label}
+        aria-autocomplete="list"
+        aria-expanded={open}
+        aria-controls={open ? id + "-suggestions" : undefined}
+        aria-activedescendant={
+          open && activeIndex >= 0 ? id + "-option-" + activeIndex : undefined
+        }
+        value={value}
+        maxLength={300}
+        disabled={disabled}
+        autoComplete="off"
+        onFocus={() => {
+          ++version.current;
+          setFocused(true);
+        }}
+        onBlur={() => {
+          setFocused(false);
+          setPredictions([]);
+        }}
+        onChange={(event) => {
+          ++version.current;
+          setPredictions([]);
+          setActiveIndex(-1);
+          setMessage("");
+          setFocused(true);
+          onChange(event.target.value);
+        }}
+        onKeyDown={(event) => {
+          if (event.key === "Escape") {
+            ++version.current;
+            setPredictions([]);
+            setFocused(false);
+          } else if (
+            open &&
+            (event.key === "ArrowDown" || event.key === "ArrowUp")
+          ) {
+            event.preventDefault();
+            setActiveIndex((current) =>
+              event.key === "ArrowDown"
+                ? (current + 1) % predictions.length
+                : current <= 0
+                  ? predictions.length - 1
+                  : current - 1,
+            );
+          } else if (open && event.key === "Enter") {
+            event.preventDefault();
+            if (activeIndex >= 0)
+              void selectPrediction(predictions[activeIndex]);
+          }
+        }}
+        placeholder={"Search " + label.toLowerCase()}
+        className="h-12 text-base md:text-sm"
+        required
+      />
+      {open && (
+        <div className="mt-1 overflow-hidden rounded-lg border border-input bg-white shadow-sm">
+          <ul
+            ref={list}
+            id={id + "-suggestions"}
+            role="listbox"
+            aria-label={label + " suggestions"}
+            className="max-h-44 overflow-y-auto overscroll-contain"
+          >
+            {predictions.map((prediction, index) => (
+              <li
+                key={index}
+                id={id + "-option-" + index}
+                role="option"
+                aria-selected={index === activeIndex}
+                className={
+                  "cursor-pointer break-words px-3 py-3 text-sm hover:bg-blue-50 " +
+                  (index === activeIndex ? "bg-blue-50" : "")
+                }
+                onMouseDown={(event) => event.preventDefault()}
+                onClick={() => void selectPrediction(prediction)}
+              >
+                {prediction.text.toString()}
+              </li>
+            ))}
+          </ul>
+          <div className="border-t px-3 py-2 text-right text-xs text-slate-600">
+            Google Maps
+          </div>
+        </div>
       )}
       {message && (
         <p role="status" className="mt-1 text-xs text-muted-foreground">

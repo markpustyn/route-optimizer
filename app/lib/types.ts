@@ -42,6 +42,7 @@ export type GooglePlace = {
 };
 
 export type GooglePlacePrediction = {
+  text: { toString: () => string };
   toPlace: () => GooglePlace;
 };
 
@@ -120,6 +121,17 @@ declare global {
           }) => HTMLElement;
         };
         places: {
+          AutocompleteSessionToken: new () => object;
+          AutocompleteSuggestion: {
+            fetchAutocompleteSuggestions: (request: {
+              input: string;
+              sessionToken: object;
+              includedRegionCodes: string[];
+              locationBias: { center: MapPosition; radius: number };
+            }) => Promise<{
+              suggestions: { placePrediction?: GooglePlacePrediction }[];
+            }>;
+          };
           PlaceAutocompleteElement: new () => GooglePlaceAutocompleteElement;
         };
       };

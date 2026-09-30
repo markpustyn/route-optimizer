@@ -64,8 +64,8 @@ export default function Home() {
           }
         />
       )}
-      <div className="relative h-dvh overflow-hidden grid grid-cols-1 md:grid-cols-[360px_minmax(0,1fr)] lg:grid-cols-[440px_minmax(0,1fr)] 2xl:grid-cols-[480px_minmax(0,1fr)]">
-        <div className="overflow-y-auto overscroll-contain bg-muted">
+      <div className="relative grid h-dvh grid-cols-1 grid-rows-[minmax(0,1fr)_minmax(0,1fr)] overflow-hidden md:grid-cols-[360px_minmax(0,1fr)] md:grid-rows-[minmax(0,1fr)] lg:grid-cols-[440px_minmax(0,1fr)] 2xl:grid-cols-[480px_minmax(0,1fr)]">
+        <div className="order-last min-h-0 min-w-0 overflow-y-auto overscroll-contain bg-muted md:order-first">
           <SideBar
             mapLoaded={ready}
             busy={busy}

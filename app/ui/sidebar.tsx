@@ -117,7 +117,7 @@ export default function SideBar({
   }
 
   return (
-    <div className="min-h-full bg-[#FAFCFF] p-4">
+    <div className="min-h-full w-full bg-[#FAFCFF] p-4 md:max-w-5xl">
       <section className="rounded-2xl bg-card p-4 lg:px-8 lg:pt-9 2xl:p-11">
         <form onSubmit={optimize}>
           <fieldset disabled={busy} className="space-y-5">

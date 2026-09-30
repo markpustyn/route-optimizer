@@ -103,7 +103,7 @@ export default function RouteMap({
 
   return (
     <section
-      className="relative min-h-[650px] overflow-hidden bg-secondary md:min-h-[750px]"
+      className="relative min-h-0 min-w-0 overflow-hidden bg-secondary"
       aria-label="Route map and results"
     >
       <div ref={mapElement} className="absolute inset-0 overflow-hidden" />
