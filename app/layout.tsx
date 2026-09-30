@@ -3,7 +3,7 @@ import { Geist, Geist_Mono, Inter } from "next/font/google";
 import "./globals.css";
 import { cn } from "@/lib/utils";
 import { Toaster } from "sonner";
-import { Analytics } from "@vercel/analytics/next"
+import { Analytics } from "@vercel/analytics/next";
 
 const inter = Inter({ subsets: ["latin"], variable: "--font-inter" });
 
@@ -20,7 +20,7 @@ const geistMono = Geist_Mono({
 export const metadata: Metadata = {
   title: "Stop Nest — Simple Route Optimizer",
   description:
-    "Optimize a driving route for up to 24 destinations by time or distance.",
+    "Optimize a driving route for up to 50 destinations by time or distance.",
 };
 
 export default function RootLayout({ children }: LayoutProps<"/">) {
@@ -58,7 +58,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
         <link rel="manifest" href="/images/site.webmanifest" />
       </head>
       <body className="flex min-h-full flex-col bg-background text-foreground">
-         <Analytics />
+        <Analytics />
         {children}
         <Toaster position="top-center" />
       </body>

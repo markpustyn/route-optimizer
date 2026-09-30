@@ -1,6 +1,6 @@
 # Waypoint
 
-A simple driving-route planner built from the existing Next.js template. Enter a start and 2–24 destinations (one full address per line), choose time or distance, and optimize. Includes an optional return to start, a route map, ordered stops, estimated totals, per-leg Google Maps navigation, and a text download. The sample fills in ten Sacramento destinations.
+A simple driving-route planner built from the existing Next.js template. Enter a start and 2–50 destinations (one full address per line), choose time or distance, and optimize. Includes an optional return to start, a route map, ordered stops, estimated totals, per-leg Google Maps navigation, and a text download. The sample fills in ten Sacramento destinations.
 
 ## Run
 
@@ -18,9 +18,9 @@ Keep the existing `.env.local` and all Supabase/Postgres settings. Database clie
 - Optional `NEXT_PUBLIC_GOOGLE_MAPS_MAP_ID`; otherwise the map uses `DEMO_MAP_ID`.
 - For compatibility, routing falls back to the existing Maps key if no server key is configured. Browser-referrer restrictions usually prevent server requests; configure the separate server key if routing reports an authorization error.
 
-The server requests a road-distance/time matrix, improves the destination order using multi-start nearest-neighbor and directed 2-opt, then requests the driving route for that order. Time and distance are selectable objectives; distance means distance along Google's returned driving paths, not an exhaustive search over all roads. The algorithm is approximate and never worsens the entered order's selected matrix cost. Estimates exclude live traffic. Percentage savings compare matrix costs, while displayed totals come from the final route.
+The server requests a road-distance/time matrix, improves the destination order using multi-start nearest-neighbor and directed 2-opt, then requests the driving route for that order. Matrix requests use batches of at most 25 origins and 25 destinations. Driving routes use at most 25 intermediate stops per request with shared endpoints; their legs, geometry, distances, and durations are combined into one result. Time and distance are selectable objectives; distance means distance along Google's returned driving paths, not an exhaustive search over all roads. The algorithm is approximate and never worsens the entered order's selected matrix cost. Estimates exclude live traffic. Percentage savings compare matrix costs, while displayed totals come from the final route.
 
-At the maximum size, each optimization requests 625 matrix elements plus one route; Google API charges and quotas apply. Stops must be connected by car. Before a public launch, configure provider quotas and deployment-level rate limits for the routing endpoint.
+At the maximum size, each optimization requests 2,601 matrix elements across nine requests plus two route requests; Google API charges and quotas apply. Stops must be connected by car. Before a public launch, configure provider quotas and deployment-level rate limits for the routing endpoint.
 
 References: [Route matrix](https://developers.google.com/maps/documentation/routes/compute_route_matrix), [Compute routes](https://developers.google.com/maps/documentation/routes/reference/rest/v2/TopLevel/computeRoutes).
 

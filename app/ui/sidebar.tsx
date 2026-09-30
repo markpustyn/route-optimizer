@@ -29,16 +29,17 @@ type SidebarProps = {
 
 type Destination = { id: number; address: string };
 
+
 const sample = [
-  "Golden Gate Bridge",
-  "Palace of Fine Arts",
-  "Fisherman's Wharf",
-  "Coit Tower",
-  "Ferry Building",
-  "Chinatown",
-  "Painted Ladies",
-  "Golden Gate Park",
-].map((place) => `${place}, San Francisco, CA`);
+  "3601 Lyon St, San Francisco, CA 94123",
+  "900 North Point St, San Francisco, CA 94109",
+  "1 Telegraph Hill Blvd, San Francisco, CA 94133",
+  "1 Ferry Building, San Francisco, CA 94111",
+  "600 Montgomery St, San Francisco, CA 94111",
+  "710 Steiner St, San Francisco, CA 94117",
+  "200 Larkin St, San Francisco, CA 94102",
+  "151 3rd St, San Francisco, CA 94103",
+];
 
 export default function SideBar({
   mapLoaded,
@@ -70,7 +71,7 @@ export default function SideBar({
   }
 
   function addDestination() {
-    if (destinations.length >= 24) return;
+    if (destinations.length >= 50) return;
     const destination = { id: nextId.current++, address: "" };
     setDestinations((current) => [...current, destination]);
     onChange();
@@ -140,7 +141,7 @@ export default function SideBar({
               <div className="flex items-center justify-between">
                 <h2 className="text-sm font-medium">Your destinations</h2>
                 <Badge variant="secondary">
-                  {destinations.length} / 24 stops
+                  {destinations.length} / 50 stops
                 </Badge>
               </div>
               <p className="text-xs text-muted-foreground">
@@ -193,7 +194,7 @@ export default function SideBar({
               <div className="text-left gap-2 ml-0">
                 <Button
                   type="button"
-                  disabled={busy || destinations.length >= 24}
+                  disabled={busy || destinations.length >= 50}
                   onClick={addDestination}
                   className="w-full h-12 bg-white text-black hover:bg-muted hover:text-foreground"
                 >

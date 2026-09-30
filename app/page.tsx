@@ -22,7 +22,7 @@ const features = [
     icon: Route,
     title: "A better order for every stop",
     description:
-      "Add up to 24 destinations and let StopNest organize your journey. Less planning, more getting things done.",
+      "Add up to 50 destinations and let StopNest organize your journey. Less planning, more getting things done.",
     label: "PLAN SMARTER",
   },
   {
@@ -112,8 +112,8 @@ export default function Page() {
 
               <p className="mt-6 max-w-2xl text-lg leading-8 text-slate-600">
                 Simplify your route planning in seconds. Add your destinations,
-                explore 24 optimized routes, and choose the best way to get
-                where you need to go.
+                find an optimized route, and choose the best way to get where
+                you need to go.
               </p>
 
               <div className="mt-8">
@@ -141,7 +141,7 @@ export default function Page() {
             </div>
             <div className="mt-7 flex flex-wrap justify-center gap-x-10 gap-y-4 text-xs font-medium text-slate-500 sm:text-sm">
               {[
-                "Up to 24 destinations",
+                "Up to 50 destinations",
                 "Download your route",
                 "Open in Google Maps",
                 "Always free to use",
