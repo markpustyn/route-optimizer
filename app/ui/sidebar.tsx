@@ -16,6 +16,7 @@ import { Badge } from "@/components/ui/badge";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import type { RouteRequest, RouteResult, SelectedPlace } from "@/app/lib/types";
 import AddressInput from "./address-input";
+import { usePremium } from "@/components/premium-provider";
 
 type SidebarProps = {
   mapLoaded: boolean;
@@ -28,7 +29,6 @@ type SidebarProps = {
 };
 
 type Destination = { id: number; address: string };
-
 
 const sample = [
   "3601 Lyon St, San Francisco, CA 94123",
@@ -51,6 +51,7 @@ export default function SideBar({
   onPlaceSelect,
 }: SidebarProps) {
   const [start, setStart] = useState("");
+  const { premium, showUpgrade } = usePremium();
   const [destinations, setDestinations] = useState<Destination[]>([
     { id: 0, address: "" },
     { id: 1, address: "" },
@@ -58,6 +59,7 @@ export default function SideBar({
   const [roundTrip, setRoundTrip] = useState(true);
   const [reverseDirection, setReverseDirection] = useState(false);
   const nextId = useRef(2);
+  const maxDestinations = premium ? 50 : 8;
   const canOptimize =
     start.trim().length > 0 &&
     destinations.length >= 2 &&
@@ -71,7 +73,11 @@ export default function SideBar({
   }
 
   function addDestination() {
-    if (destinations.length >= 50) return;
+    if (!premium && destinations.length >= 8) {
+      showUpgrade();
+      return;
+    }
+    if (destinations.length >= maxDestinations) return;
     const destination = { id: nextId.current++, address: "" };
     setDestinations((current) => [...current, destination]);
     onChange();
@@ -86,6 +92,10 @@ export default function SideBar({
   async function optimize(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     if (busy || !canOptimize) return;
+    if (!premium && destinations.length > 8) {
+      showUpgrade();
+      return;
+    }
     await onOptimize({
       start: start.trim(),
       destinations: destinations.map((stop) => stop.address.trim()),
@@ -96,6 +106,7 @@ export default function SideBar({
   }
 
   function openInGoogleMaps() {
+
     if (!result || result.addresses.length < 2) return;
 
     const addresses = result.addresses;
@@ -141,12 +152,13 @@ export default function SideBar({
               <div className="flex items-center justify-between">
                 <h2 className="text-sm font-medium">Your destinations</h2>
                 <Badge variant="secondary">
-                  {destinations.length} / 50 stops
+                  {destinations.length} / {maxDestinations} stops
                 </Badge>
               </div>
               <p className="text-xs text-muted-foreground">
                 Add each destination separately. Search for an address in each
-                field.
+                field. Stops are ordered by geographic proximity; driving time
+                and distance are calculated for the resulting route.
               </p>
               <div className="space-y-2">
                 {destinations.map((stop, index) => (
@@ -194,7 +206,7 @@ export default function SideBar({
               <div className="text-left gap-2 ml-0">
                 <Button
                   type="button"
-                  disabled={busy || destinations.length >= 50}
+                  disabled={busy || (premium && destinations.length >= 50)}
                   onClick={addDestination}
                   className="w-full h-12 bg-white text-black hover:bg-muted hover:text-foreground"
                 >
@@ -285,7 +297,7 @@ export default function SideBar({
           <div role="status" aria-live="polite">
             {busy && (
               <p className="mt-3 text-xs text-primary">
-                Comparing driving times and distances between your stops…
+                Ordering stops and calculating driving directions…
               </p>
             )}
           </div>

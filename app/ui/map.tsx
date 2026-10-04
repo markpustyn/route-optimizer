@@ -108,8 +108,12 @@ export default function RouteMap({
     >
       <div ref={mapElement} className="absolute inset-0 overflow-hidden" />
       {result && routeNeedsUpdate && (
-        <p role="status" className="absolute left-6 right-6 top-6 rounded-lg border border-border bg-card px-4 py-3 text-xs text-foreground shadow-sm">
-          Addresses or options changed. Click Optimize to update the displayed route.
+        <p
+          role="status"
+          className="absolute left-6 right-6 top-6 rounded-lg border border-border bg-card px-4 py-3 text-xs text-foreground shadow-sm"
+        >
+          Addresses or options changed. Click Optimize to update the displayed
+          route.
         </p>
       )}
       {(!key || mapError) && (
@@ -143,10 +147,6 @@ export default function RouteMap({
             </Button>
           </CardHeader>
 
-
-
-
-
           <CardContent>
             <div className="mb-4 grid grid-cols-3 gap-2 rounded-lg bg-secondary p-3 [&_strong]:block [&_strong]:text-lg [&_span]:text-[10px] [&_span]:text-muted-foreground">
               <div>
@@ -158,8 +158,16 @@ export default function RouteMap({
                 <span>Total distance</span>
               </div>
               <div>
-                <strong>{result.savingsPercent}%</strong>
-                <span>Less {result.metric}*</span>
+                <strong>
+                  {result.savingsPercent === null
+                    ? "Nearby"
+                    : `${result.savingsPercent}%`}
+                </strong>
+                <span>
+                  {result.savingsPercent === null
+                    ? "Geographic ordering"
+                    : `Less ${result.metric}*`}
+                </span>
               </div>
             </div>
             <ol className="list-none divide-y divide-border [&_li]:flex [&_li]:items-center [&_li]:gap-2.5 [&_li]:py-3 [&_li]:text-xs [&_li>div]:min-w-0 [&_li>div]:flex-1 [&_small]:mt-1 [&_small]:block [&_small]:text-[10px] [&_small]:text-muted-foreground [&_a]:rounded-md [&_a]:p-2 [&_a]:text-primary [&_a]:outline-none [&_a:focus-visible]:ring-2 [&_a:focus-visible]:ring-ring [&_a:hover]:bg-secondary">

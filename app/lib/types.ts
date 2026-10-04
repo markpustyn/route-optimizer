@@ -148,7 +148,7 @@ export type RouteLeg = {
 };
 export type RouteResult = {
   addresses: string[];
-  savingsPercent: number;
+  savingsPercent: number | null;
   metric: Metric;
   route: {
     distanceMeters: number;

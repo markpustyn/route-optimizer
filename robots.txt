@@ -1,4 +1,5 @@
 User-agent: *
+Disallow: /map
 Allow: /
 
 Sitemap: https://www.stopnest.com/sitemap.xml

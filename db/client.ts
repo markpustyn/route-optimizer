@@ -1,10 +1,14 @@
-import { drizzle } from "drizzle-orm/postgres-js";
-import postgres from "postgres";
+import { neon } from "@neondatabase/serverless";
+import { drizzle } from "drizzle-orm/neon-http";
 
-const connectionString = process.env.NEXT_PUBLIC_DATABASE_URL!;
+const connectionString = process.env.DATABASE_URL;
+if (!connectionString) {
+  throw new Error(
+    "DATABASE_URL is required. Add your Neon connection string to the server environment.",
+  );
+}
 
-const client = postgres(connectionString, {
-  prepare: false,
-});
+const client = neon(connectionString);
 
 export const db = drizzle({ client });
+import "server-only";

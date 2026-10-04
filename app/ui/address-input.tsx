@@ -78,7 +78,17 @@ export default function AddressInput({
   }, [value, focused, disabled, mapLoaded]);
 
   useEffect(() => {
-    list.current?.children[activeIndex]?.scrollIntoView({ block: "nearest" });
+    const container = list.current;
+    const option = container?.children[activeIndex];
+    if (!container || !option) return;
+    // Scroll only the suggestions, not the form or page containing the input.
+    const bounds = container.getBoundingClientRect();
+    const optionBounds = option.getBoundingClientRect();
+    if (optionBounds.top < bounds.top) {
+      container.scrollTop += optionBounds.top - bounds.top;
+    } else if (optionBounds.bottom > bounds.bottom) {
+      container.scrollTop += optionBounds.bottom - bounds.bottom;
+    }
   }, [activeIndex]);
   useEffect(
     () => () => {
@@ -116,13 +126,14 @@ export default function AddressInput({
   }
 
   return (
-    <div className="min-w-0 flex-1">
+    <div className="relative h-12 min-w-0 flex-1">
       <Input
         ref={input}
         id={id}
         role="combobox"
         aria-label={label}
         aria-autocomplete="list"
+        aria-describedby={message ? id + "-status" : undefined}
         aria-expanded={open}
         aria-controls={open ? id + "-suggestions" : undefined}
         aria-activedescendant={
@@ -176,13 +187,13 @@ export default function AddressInput({
         required
       />
       {open && (
-        <div className="mt-1 overflow-hidden rounded-lg border border-input bg-white shadow-sm">
+        <div className="absolute inset-x-0 top-full z-50 mt-1 overflow-hidden rounded-lg border border-input bg-white shadow-lg">
           <ul
             ref={list}
             id={id + "-suggestions"}
             role="listbox"
             aria-label={label + " suggestions"}
-            className="max-h-44 overflow-y-auto overscroll-contain"
+            className="max-h-44 overflow-y-auto overscroll-contain [overflow-anchor:none]"
           >
             {predictions.map((prediction, index) => (
               <li
@@ -207,7 +218,11 @@ export default function AddressInput({
         </div>
       )}
       {message && (
-        <p role="status" className="mt-1 text-xs text-muted-foreground">
+        <p
+          id={id + "-status"}
+          role="status"
+          className="absolute inset-x-0 top-full z-50 mt-1 rounded-lg border border-input bg-white px-3 py-2 text-xs text-muted-foreground shadow-lg"
+        >
           {message}
         </p>
       )}

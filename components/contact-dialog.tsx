@@ -15,7 +15,7 @@ import {
 } from "@/components/ui/dialog";
 
 // Add your Formspree form ID to .env.local, then restart the dev server.
-const formId = process.env.NEXT_PUBLIC_FORMSPREE_FORM_ID?.trim();
+const formId = 'moevrkzg'
 
 export function ContactDialog() {
   const [status, setStatus] = useState<

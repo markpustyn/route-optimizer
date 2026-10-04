@@ -75,12 +75,12 @@ export async function POST(request: Request) {
       { status: 400 },
     );
   }
-  const key =
-    process.env.GOOGLE_MAPS_SERVER_API_KEY ||
-    process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY;
+  const key  = process.env.GOOGLE_MAPS_API_KEY;
+
+  
   if (!key)
     return NextResponse.json(
-      { error: "Add GOOGLE_MAPS_SERVER_API_KEY to enable route optimization." },
+      { error: "Add GOOGLE_MAPS_API_KEY to enable route optimization." },
       { status: 503 },
     );
   const addresses: string[] = [
@@ -88,66 +88,119 @@ export async function POST(request: Request) {
     ...input.destinations.map((a: string) => a.trim()),
   ];
   try {
-    const waypoints = addresses.map((address) => ({ waypoint: { address } }));
-    // 25 x 25 respects both the 625-element and 50-address limits.
-    const batches = [];
-    for (
-      let originOffset = 0;
-      originOffset < waypoints.length;
-      originOffset += 25
-    ) {
-      for (
-        let destinationOffset = 0;
-        destinationOffset < waypoints.length;
-        destinationOffset += 25
-      ) {
-        batches.push({ originOffset, destinationOffset });
-      }
-    }
+    const useRoadMatrix = process.env.ROUTE_OPTIMIZATION_MODE === "road-matrix";
     const matrix = addresses.map(() => addresses.map(() => Infinity));
-    await Promise.all(
-      batches.map(async ({ originOffset, destinationOffset }) => {
-        const origins = waypoints.slice(originOffset, originOffset + 25);
-        const destinations = waypoints.slice(
-          destinationOffset,
-          destinationOffset + 25,
+    if (!useRoadMatrix) {
+      // Linear paid lookups instead of a quadratic, per-element road matrix.
+      // Do not persist Google geocoding results in an application cache.
+      const positions = [];
+      for (const address of addresses) {
+        const params = new URLSearchParams({ address, key });
+        const response = await fetch(
+          `https://maps.googleapis.com/maps/api/geocode/json?${params}`,
+          { signal: AbortSignal.timeout(10000), cache: "no-store" },
         );
-        const elements: Element[] = await googleRequest(
-          "distanceMatrix/v2:computeRouteMatrix",
-          {
-            origins,
-            destinations,
-            travelMode: "DRIVE",
-            routingPreference: "TRAFFIC_UNAWARE",
-          },
-          "originIndex,destinationIndex,status,condition,distanceMeters,duration",
-          key,
-        );
-        for (const e of elements) {
-          const i = e.originIndex ?? 0,
-            j = e.destinationIndex ?? 0;
-          if (
-            !Number.isInteger(i) ||
-            !Number.isInteger(j) ||
-            i < 0 ||
-            j < 0 ||
-            i >= origins.length ||
-            j >= destinations.length
-          ) {
-            throw new Error(
-              "Google returned an invalid route matrix. Please try again.",
-            );
-          }
-          if (e.status?.code || e.condition !== "ROUTE_EXISTS") continue;
-          const value =
-            input.metric === "time"
-              ? parseFloat(e.duration ?? "")
-              : e.distanceMeters;
-          if (value !== undefined && Number.isFinite(value) && value >= 0)
-            matrix[originOffset + i][destinationOffset + j] = value;
+        if (!response.ok)
+          throw new Error(
+            "Address lookup is unavailable. Please try again later.",
+          );
+        const data = await response.json();
+        if (data.status === "REQUEST_DENIED")
+          throw new Error(
+            "Enable Geocoding API on GOOGLE_MAPS_SERVER_API_KEY for affordable route ordering.",
+          );
+        if (
+          data.status === "OVER_QUERY_LIMIT" ||
+          data.status === "OVER_DAILY_LIMIT"
+        )
+          throw new Error(
+            "Address lookup quota reached. Please try again later.",
+          );
+        const position = data.results?.[0]?.geometry?.location;
+        if (
+          data.status !== "OK" ||
+          !Number.isFinite(position?.lat) ||
+          !Number.isFinite(position?.lng)
+        )
+          throw new Error(
+            "An address could not be located. Check that every stop has a complete address.",
+          );
+        positions.push(position as { lat: number; lng: number });
+      }
+      const radians = (degrees: number) => (degrees * Math.PI) / 180;
+      for (let i = 0; i < positions.length; i++) {
+        for (let j = 0; j < positions.length; j++) {
+          const a = positions[i],
+            b = positions[j];
+          const h =
+            Math.sin(radians(b.lat - a.lat) / 2) ** 2 +
+            Math.cos(radians(a.lat)) *
+              Math.cos(radians(b.lat)) *
+              Math.sin(radians(b.lng - a.lng) / 2) ** 2;
+          matrix[i][j] = 6371000 * 2 * Math.asin(Math.sqrt(Math.min(1, h)));
         }
-      }),
-    );
+      }
+    } else {
+      const waypoints = addresses.map((address) => ({ waypoint: { address } }));
+      // 25 x 25 respects both the 625-element and 50-address limits.
+      const batches = [];
+      for (
+        let originOffset = 0;
+        originOffset < waypoints.length;
+        originOffset += 25
+      ) {
+        for (
+          let destinationOffset = 0;
+          destinationOffset < waypoints.length;
+          destinationOffset += 25
+        ) {
+          batches.push({ originOffset, destinationOffset });
+        }
+      }
+      await Promise.all(
+        batches.map(async ({ originOffset, destinationOffset }) => {
+          const origins = waypoints.slice(originOffset, originOffset + 25);
+          const destinations = waypoints.slice(
+            destinationOffset,
+            destinationOffset + 25,
+          );
+          const elements: Element[] = await googleRequest(
+            "distanceMatrix/v2:computeRouteMatrix",
+            {
+              origins,
+              destinations,
+              travelMode: "DRIVE",
+              routingPreference: "TRAFFIC_UNAWARE",
+            },
+            "originIndex,destinationIndex,status,condition,distanceMeters,duration",
+            key,
+          );
+          for (const e of elements) {
+            const i = e.originIndex ?? 0,
+              j = e.destinationIndex ?? 0;
+            if (
+              !Number.isInteger(i) ||
+              !Number.isInteger(j) ||
+              i < 0 ||
+              j < 0 ||
+              i >= origins.length ||
+              j >= destinations.length
+            ) {
+              throw new Error(
+                "Google returned an invalid route matrix. Please try again.",
+              );
+            }
+            if (e.status?.code || e.condition !== "ROUTE_EXISTS") continue;
+            const value =
+              input.metric === "time"
+                ? parseFloat(e.duration ?? "")
+                : e.distanceMeters;
+            if (value !== undefined && Number.isFinite(value) && value >= 0)
+              matrix[originOffset + i][destinationOffset + j] = value;
+          }
+        }),
+      );
+    }
     if (
       matrix.some((row, i) =>
         row.some((cost, j) => i !== j && !Number.isFinite(cost)),
@@ -163,11 +216,11 @@ export async function POST(request: Request) {
       : optimizedOrder;
     const routeOrder = input.roundTrip ? [...order, 0] : order;
     const ordered = routeOrder.map((i) => ({ address: addresses[i] }));
-    // Each segment has at most 25 intermediates (26 legs). Adjacent
+    // Stay within Essentials pricing: at most 10 intermediates (11 legs). Adjacent
     // segments share an endpoint so no stop or connecting leg is lost.
     const segments = [];
-    for (let offset = 0; offset < ordered.length - 1; offset += 26) {
-      segments.push(ordered.slice(offset, offset + 27));
+    for (let offset = 0; offset < ordered.length - 1; offset += 11) {
+      segments.push(ordered.slice(offset, offset + 12));
     }
     const routes: RouteResult["route"][] = await Promise.all(
       segments.map(async (segment) => {
@@ -223,8 +276,11 @@ export async function POST(request: Request) {
     return NextResponse.json({
       route,
       addresses: routeOrder.map((i) => addresses[i]),
-      savingsPercent:
-        baseline > 0 ? Math.round(((baseline - cost) / baseline) * 100) : 0,
+      savingsPercent: useRoadMatrix
+        ? baseline > 0
+          ? Math.round(((baseline - cost) / baseline) * 100)
+          : 0
+        : null,
       metric: input.metric,
     });
   } catch (error) {

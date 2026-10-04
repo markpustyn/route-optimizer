@@ -1,6 +1,96 @@
-import { test } from "node:test";
+import { test, beforeEach, afterEach } from "node:test";
 import assert from "node:assert/strict";
 import { POST } from "./route";
+
+let affordableOrder: string[];
+for (const reverseDirection of [false, true]) {
+  test(`affordable default uses linear lookups for 50 stops, reverse ${reverseDirection}`, async (t) => {
+    delete process.env.ROUTE_OPTIMIZATION_MODE;
+    const originalKey = process.env.GOOGLE_MAPS_SERVER_API_KEY;
+    process.env.GOOGLE_MAPS_SERVER_API_KEY = "test-key";
+    t.after(() => {
+      if (originalKey === undefined)
+        delete process.env.GOOGLE_MAPS_SERVER_API_KEY;
+      else process.env.GOOGLE_MAPS_SERVER_API_KEY = originalKey;
+    });
+    let geocodes = 0,
+      directions = 0;
+    t.mock.method(
+      globalThis,
+      "fetch",
+      async (url: string, options: RequestInit) => {
+        assert.ok(
+          !url.includes("computeRouteMatrix"),
+          "default must never purchase a matrix",
+        );
+        if (url.includes("geocode/json")) {
+          geocodes++;
+          const stop = Number(new URL(url).searchParams.get("address"));
+          return Response.json({
+            status: "OK",
+            results: [{ geometry: { location: { lat: 0, lng: stop / 100 } } }],
+          });
+        }
+        directions++;
+        const body = JSON.parse(options.body as string);
+        assert.ok(body.intermediates.length <= 10);
+        return Response.json({
+          routes: [
+            {
+              distanceMeters: 100,
+              duration: "10s",
+              legs: Array.from(
+                { length: body.intermediates.length + 1 },
+                () => ({}),
+              ),
+              polyline: { geoJsonLinestring: { coordinates: [] } },
+            },
+          ],
+        });
+      },
+    );
+    const response = await POST(
+      new Request("http://localhost/api/optimize", {
+        method: "POST",
+        body: JSON.stringify({
+          start: "0",
+          destinations: Array.from({ length: 50 }, (_, i) => String(i + 1)),
+          metric: "time",
+          roundTrip: true,
+          reverseDirection,
+        }),
+      }),
+    );
+    assert.equal(response.status, 200);
+    const result = await response.json();
+    const stops = Array.from({ length: 50 }, (_, i) => String(i + 1));
+    assert.equal(result.addresses[0], "0");
+    assert.equal(result.addresses.at(-1), "0");
+    assert.deepEqual(result.addresses.slice(1, -1).sort(), stops.sort());
+    if (reverseDirection) {
+      assert.deepEqual(
+        result.addresses.slice(1, -1),
+        affordableOrder.slice(1, -1).reverse(),
+      );
+    } else {
+      affordableOrder = result.addresses;
+    }
+    assert.equal(result.savingsPercent, null);
+    assert.equal(geocodes, 51);
+    assert.equal(directions, 5);
+    assert.equal(result.route.legs.length, 51);
+  });
+}
+
+let originalMode: string | undefined;
+beforeEach(() => {
+  originalMode = process.env.ROUTE_OPTIMIZATION_MODE;
+  process.env.ROUTE_OPTIMIZATION_MODE = "road-matrix";
+});
+afterEach(() => {
+  if (originalMode === undefined) delete process.env.ROUTE_OPTIMIZATION_MODE;
+  else process.env.ROUTE_OPTIMIZATION_MODE = originalMode;
+});
 
 const matrix = [
   [0, 1, 9],
@@ -159,7 +249,7 @@ for (const count of [24, 25, 26, 27, 50]) {
             );
           }
           routeCalls++;
-          assert.ok(body.intermediates.length <= 25);
+          assert.ok(body.intermediates.length <= 10);
           const stops = [
             body.origin,
             ...body.intermediates,
@@ -212,7 +302,7 @@ for (const count of [24, 25, 26, 27, 50]) {
       assert.deepEqual(routed, expected);
       assert.equal(pairs.size, (count + 1) ** 2);
       assert.equal(matrixCalls, Math.ceil((count + 1) / 25) ** 2);
-      assert.equal(routeCalls, Math.ceil((expected.length - 1) / 26));
+      assert.equal(routeCalls, Math.ceil((expected.length - 1) / 11));
       assert.equal(result.route.legs.length, expected.length - 1);
       assert.equal(result.route.distanceMeters, (expected.length - 1) * 10);
       assert.equal(result.route.duration, (expected.length - 1) * 1.5 + "s");

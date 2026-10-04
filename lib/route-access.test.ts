@@ -1,0 +1,70 @@
+import assert from "node:assert/strict";
+import { test } from "node:test";
+import { checkRouteAccess } from "./route-access";
+
+const requestFor = (count: number) =>
+  new Request("http://localhost/api/optimize", {
+    method: "POST",
+    body: JSON.stringify({
+      destinations: Array.from({ length: count }, (_, i) => `Stop ${i}`),
+    }),
+  });
+const user = { email: "test@example.invalid" };
+
+test("signed-out users are blocked before checking premium", async () => {
+  const response = await checkRouteAccess(requestFor(9), null, async () => {
+    throw new Error("Unexpected lookup");
+  });
+  assert.equal(response?.status, 401);
+});
+
+test("standard users can optimize eight destinations without a premium lookup", async () => {
+  const request = requestFor(8);
+  assert.equal(
+    await checkRouteAccess(request, user, async () => {
+      throw new Error("Unexpected lookup");
+    }),
+    null,
+  );
+  assert.equal(
+    (await request.json()).destinations.length,
+    8,
+    "body remains readable by route handler",
+  );
+});
+
+for (const count of [9, 50]) {
+  test(`${count} destinations require the server-stored premium role`, async () => {
+    const response = await checkRouteAccess(
+      requestFor(count),
+      user,
+      async (received) => {
+        assert.equal(received, user);
+        return false;
+      },
+    );
+    assert.equal(response?.status, 403);
+    assert.equal((await response!.json()).code, "PREMIUM_REQUIRED");
+    assert.equal(
+      await checkRouteAccess(requestFor(count), user, async () => true),
+      null,
+    );
+  });
+}
+
+test("invalid input is left to existing validation", async () => {
+  for (const request of [
+    requestFor(51),
+    new Request("http://localhost/api/optimize", {
+      method: "POST",
+      body: "invalid",
+    }),
+  ]) {
+    assert.equal(
+      await checkRouteAccess(request, user, async () => {
+        throw new Error("Unexpected lookup");
+      }),
+      null,
+    );
+  }
+});
