@@ -18,9 +18,9 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Stop Nest — Simple Route Optimizer",
+  title: "Stop Nest | Google Maps Route Planner",
   description:
-    "Optimize a driving route for up to 50 destinations by time or distance.",
+    "Save time planning routes with multiple stops. Add destinations with address autocomplete, optimize your drive, and get directions in Google Maps with Stop Nest.",
 };
 
 export default function RootLayout({ children }: LayoutProps<"/">) {

@@ -59,7 +59,7 @@ export default function SideBar({
   const [roundTrip, setRoundTrip] = useState(true);
   const [reverseDirection, setReverseDirection] = useState(false);
   const nextId = useRef(2);
-  const maxDestinations = premium ? 50 : 8;
+  const maxDestinations = premium ? 50 : 15;
   const canOptimize =
     start.trim().length > 0 &&
     destinations.length >= 2 &&
@@ -73,7 +73,7 @@ export default function SideBar({
   }
 
   function addDestination() {
-    if (!premium && destinations.length >= 8) {
+    if (!premium && destinations.length >= 15) {
       showUpgrade();
       return;
     }
@@ -92,7 +92,7 @@ export default function SideBar({
   async function optimize(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     if (busy || !canOptimize) return;
-    if (!premium && destinations.length > 8) {
+    if (!premium && destinations.length > 15) {
       showUpgrade();
       return;
     }
@@ -106,7 +106,6 @@ export default function SideBar({
   }
 
   function openInGoogleMaps() {
-
     if (!result || result.addresses.length < 2) return;
 
     const addresses = result.addresses;
@@ -151,10 +150,16 @@ export default function SideBar({
             <div className="space-y-3">
               <div className="flex items-center justify-between">
                 <h2 className="text-sm font-medium">Your destinations</h2>
-                <Badge variant="secondary">
+                <Badge
+                  variant="secondary"
+                  aria-label={`${destinations.length} of ${maxDestinations} destinations; start and return excluded`}
+                >
                   {destinations.length} / {maxDestinations} stops
                 </Badge>
               </div>
+              <p className="text-xs font-medium text-muted-foreground">
+                Starting point and return to start are not counted.
+              </p>
               <p className="text-xs text-muted-foreground">
                 Add each destination separately. Search for an address in each
                 field. Stops are ordered by geographic proximity; driving time
@@ -229,7 +234,7 @@ export default function SideBar({
                   onChange();
                 }}
               >
-                Try 8 stops <ArrowRight className="size-3" />
+                Try {sample.length} stops <ArrowRight className="size-3" />
               </Button>
             </div>
 

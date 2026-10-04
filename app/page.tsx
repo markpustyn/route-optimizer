@@ -16,7 +16,7 @@ import { PREMIUM_PRICE_LABEL } from "@/lib/billing-plan";
 export const metadata: Metadata = {
   title: "StopNest — Route planning, one stop at a time",
   description:
-    "Plan routes with up to 8 destinations for free. Upgrade to StopNest Premium for up to 50 destinations at $10 USD per month. View driving estimates and navigate with Google Maps.",
+    "Plan routes with up to 15 destinations for free. Upgrade to StopNest Premium for up to 50 destinations at $10 USD per month. View driving estimates and navigate with Google Maps.",
 };
 
 const actionClass =
@@ -45,7 +45,7 @@ const features = [
     icon: Download,
     title: "Take your plan with you",
     description:
-      "Download your ordered stops as a text file to keep handy or share before you head out.",
+      "Download your ordered stops as a text file or open in Google Maps",
   },
 ];
 
@@ -99,28 +99,23 @@ export default function Page() {
               stop
             </p>
             <h1 className="mt-5 text-4xl font-semibold leading-[1.12] tracking-tight sm:text-6xl">
-              Your stops.
+              Google Maps
               <br />
-              One simple plan.
+              Route Planner
             </h1>
             <p className="mt-5 max-w-xl text-base leading-7 text-muted-foreground sm:text-lg">
-              From everyday errands to a full day of deliveries, put your
-              destinations in order and see your route come together.
+              Save time and effort planning routes with multiple stops. Add
+              destinations with address autocomplete, optimize your drive, and
+              get directions in Google Maps with StopNest.
             </p>
             <div className="mt-7 flex flex-wrap items-center gap-4">
               <Link href="/map" className={actionClass}>
                 Plan a route{" "}
                 <ArrowRight aria-hidden="true" className="size-4" />
               </Link>
-              <a
-                href="#pricing"
-                className="inline-flex min-h-11 items-center px-2 text-sm font-medium text-muted-foreground hover:text-foreground"
-              >
-                Compare plans
-              </a>
             </div>
             <p className="mt-4 text-xs leading-5 text-muted-foreground">
-              Start free with 8 destinations per route. Sign in with Google.
+              Start free with 15 destinations per route. Sign in with Google.
             </p>
           </div>
           <div className="mt-10 overflow-hidden rounded-2xl border border-border bg-card sm:mt-12">
@@ -201,7 +196,7 @@ export default function Page() {
                 </p>
                 <p className="mt-6 border-y border-border py-4 text-sm">
                   <strong className="font-semibold">
-                    Up to 8 destinations
+                    Up to 15 destinations
                   </strong>{" "}
                   per route
                 </p>
@@ -280,8 +275,9 @@ export default function Page() {
             </div>
             <p className="mt-5 text-sm leading-6 text-muted-foreground">
               Limits apply to destinations in a single route, excluding your
-              starting point. Both plans require Google sign-in. Add a ninth
-              destination on Standard to see the Premium upgrade option.
+              starting point and the return to start. Both plans require Google
+              sign-in. Add a sixteenth destination on Standard to see the
+              Premium upgrade option.
             </p>
           </div>
         </section>
@@ -301,7 +297,7 @@ export default function Page() {
               {
                 question: "What changes with Premium?",
                 answer:
-                  "Premium increases your destination limit from 8 to 50 per route. Route ordering, driving estimates, text downloads, and Google Maps navigation are included in both plans.",
+                  "Premium increases your destination limit from 15 to 50 per route. Route ordering, driving estimates, text downloads, and Google Maps navigation are included in both plans.",
               },
               {
                 question: "How are my stops ordered?",
@@ -311,7 +307,7 @@ export default function Page() {
               {
                 question: "How do I upgrade?",
                 answer:
-                  "Open the map and sign in with Google. Choose Upgrade to Premium in your account menu, or add more than 8 destinations to open the upgrade prompt.",
+                  "Open the map and sign in with Google. Choose Upgrade to Premium in your account menu, or add more than 15 destinations to open the upgrade prompt.",
               },
             ].map(({ question, answer }) => (
               <details key={question} className="group py-5">

@@ -18,7 +18,7 @@ export async function checkRouteAccess(
   }
   if (
     Array.isArray(input?.destinations) &&
-    input.destinations.length > 8 &&
+    input.destinations.length > 15 &&
     input.destinations.length <= 50
   ) {
     if (!(await checkPremium(user))) {
@@ -26,7 +26,7 @@ export async function checkRouteAccess(
         {
           code: "PREMIUM_REQUIRED",
           error:
-            "Upgrade to Premium to plan routes with more than 8 destinations.",
+            "Upgrade to Premium to plan routes with more than 15 destinations.",
         },
         { status: 403 },
       );

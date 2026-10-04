@@ -3,14 +3,14 @@ import { test } from "node:test";
 import { neonConfig } from "@neondatabase/serverless";
 
 test("premium access depends on this user's stored role and fails closed", async (t) => {
-  const originalUrl = process.env.NEXT_PUBLIC_DATABASE_URL;
+  const originalUrl = process.env.DATABASE_URL;
   const originalFetch = neonConfig.fetchFunction;
-  process.env.NEXT_PUBLIC_DATABASE_URL =
+  process.env.DATABASE_URL =
     "postgresql://test:test@unit-test.neon.tech/test";
   t.after(() => {
     neonConfig.fetchFunction = originalFetch;
-    if (originalUrl === undefined) delete process.env.NEXT_PUBLIC_DATABASE_URL;
-    else process.env.NEXT_PUBLIC_DATABASE_URL = originalUrl;
+    if (originalUrl === undefined) delete process.env.DATABASE_URL;
+    else process.env.DATABASE_URL = originalUrl;
   });
   let rows: (string | null)[][] = [];
   let requests = 0;
