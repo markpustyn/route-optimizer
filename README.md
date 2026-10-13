@@ -71,6 +71,16 @@ NEXT_PUBLIC_FORMSPREE_FORM_ID=your_form_id
 
 Use the ID from your Formspree integration endpoint (`https://formspree.io/f/your_form_id`). Restart the dev server after adding it; for production, set the variable in your hosting environment and rebuild. Until configured, the dialog opens but sending is disabled.
 
+## Resend unsubscribe
+
+The homepage footer links to `/unsubscribe`. Its form updates a Resend contact by email with `unsubscribed: true`, opting them out of all Resend Broadcasts. Set the server-only `RESEND_API_KEY` in `.env.local` and your hosting environment using a key with access to Contacts, then restart the server. Failed updates display a retry message; missing contacts receive the same confirmation to keep contact membership private.
+
+Link to `https://YOUR_DOMAIN/unsubscribe` from externally managed emails. There is currently no email sender or template in this repository. For Resend Broadcasts and Automations, use `<a href="{{{RESEND_UNSUBSCRIBE_URL}}}">Unsubscribe</a>` in the email template for Resend's automatic recipient-specific unsubscribe handling. This site's form is a separate manual opt-out page, not a one-click List-Unsubscribe endpoint. Contact preferences do not automatically suppress emails sent directly through the transactional API.
+
+References: [Update Contact](https://resend.com/docs/api-reference/contacts/update-contact), [Unsubscribe links](https://resend.com/docs/knowledge-base/should-i-add-an-unsubscribe-link).
+
+Validation: `npx tsx --test app/unsubscribe/actions.test.ts`.
+
 ## Stripe Premium billing
 
 The Premium button opens Stripe Checkout for product `prod_VNMOo2og1ESzk1`, price `price_1UMbgBBMi1VZB10HaSdaVDSD` ($10 USD/month). The existing key and product are **test mode**. No real payments are enabled. The account menu includes Manage billing, with cancellation at the end of the paid month.
