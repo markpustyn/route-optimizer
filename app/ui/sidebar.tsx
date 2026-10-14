@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, useState, type FormEvent } from "react";
+import { useEffect, useRef, useState, type FormEvent } from "react";
 import {
   ArrowRight,
   Circle,
@@ -59,6 +59,61 @@ export default function SideBar({
   const [roundTrip, setRoundTrip] = useState(true);
   const [reverseDirection, setReverseDirection] = useState(false);
   const nextId = useRef(2);
+  const [draftLoaded, setDraftLoaded] = useState(false);
+
+  useEffect(() => {
+    // Restore only after hydration; browser storage is unavailable on the server.
+    /* eslint-disable react-hooks/set-state-in-effect */
+    try {
+      const saved = sessionStorage.getItem("stopnest-route-draft");
+      if (saved) {
+        const draft = JSON.parse(saved);
+        if (
+          typeof draft.start === "string" &&
+          Array.isArray(draft.destinations) &&
+          draft.destinations.length >= 2 &&
+          draft.destinations.length <= 50 &&
+          draft.destinations.every(
+            (address: unknown) => typeof address === "string",
+          ) &&
+          typeof draft.roundTrip === "boolean" &&
+          typeof draft.reverseDirection === "boolean"
+        ) {
+          setStart(draft.start);
+          setDestinations(
+            draft.destinations.map((address: string, id: number) => ({
+              id,
+              address,
+            })),
+          );
+          setRoundTrip(draft.roundTrip);
+          setReverseDirection(draft.reverseDirection);
+          nextId.current = draft.destinations.length;
+        }
+      }
+    } catch {
+      // A blocked storage API or an invalid draft must not prevent route planning.
+    }
+    setDraftLoaded(true);
+    /* eslint-enable react-hooks/set-state-in-effect */
+  }, []);
+
+  useEffect(() => {
+    if (!draftLoaded) return;
+    try {
+      sessionStorage.setItem(
+        "stopnest-route-draft",
+        JSON.stringify({
+          start,
+          destinations: destinations.map((stop) => stop.address),
+          roundTrip,
+          reverseDirection,
+        }),
+      );
+    } catch {
+      // Route planning remains available when browser storage is disabled.
+    }
+  }, [draftLoaded, start, destinations, roundTrip, reverseDirection]);
   const maxDestinations = premium ? 50 : 15;
   const canOptimize =
     start.trim().length > 0 &&

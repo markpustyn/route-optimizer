@@ -1,16 +1,10 @@
 "use client";
 
-import { Suspense, useState } from "react";
+import { createContext, useContext, Suspense, useState } from "react";
 import type { Session } from "next-auth";
 import { SessionProvider, signOut, useSession } from "next-auth/react";
 import { useSearchParams } from "next/navigation";
-import {
-  LoaderCircle,
-  LogOut,
-  Route,
-  Sparkles,
-  UserRound,
-} from "lucide-react";
+import { LogOut, Sparkles, UserRound } from "lucide-react";
 import { usePremium } from "@/components/premium-provider";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
@@ -20,6 +14,16 @@ import {
   PopoverTrigger,
 } from "@/components/ui/popover";
 import SignIn from "@/components/google-sign-in";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+} from "@/components/ui/dialog";
+
+const MapSignInContext = createContext({ requestSignIn: () => {} });
+export const useMapSignIn = () => useContext(MapSignInContext);
 
 function SignInError() {
   const params = useSearchParams();
@@ -35,8 +39,9 @@ function SignInError() {
 }
 
 function AccountOverlay({ children }: { children: React.ReactNode }) {
-  const { data: session, status } = useSession();
+  const { data: session } = useSession();
   const user = session?.user;
+  const [signInOpen, setSignInOpen] = useState(false);
   const { premium, showUpgrade } = usePremium();
   const [pending, setPending] = useState(false);
   const [error, setError] = useState("");
@@ -61,57 +66,31 @@ function AccountOverlay({ children }: { children: React.ReactNode }) {
 
   return (
     <div className="relative isolate h-dvh overflow-hidden">
-      <div inert={!user} aria-hidden={!user ? true : undefined}>
+      <MapSignInContext.Provider
+        value={{ requestSignIn: () => setSignInOpen(true) }}
+      >
         {children}
+      </MapSignInContext.Provider>
+      <Dialog open={signInOpen} onOpenChange={setSignInOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Sign in to optimize your route</DialogTitle>
+            <DialogDescription>
+              Continue with Google to optimize your stops. Your first sign-in
+              creates your account.
+            </DialogDescription>
+          </DialogHeader>
+          <SignIn />
+          <p className="text-xs text-muted-foreground">
+            Your stops will be here when you return. Click Optimize to continue.
+          </p>
+        </DialogContent>
+      </Dialog>
+      <div className="fixed top-5 left-5 z-40 max-w-sm rounded-lg bg-background px-4">
+        <Suspense>
+          <SignInError />
+        </Suspense>
       </div>
-      {!user && (
-        <div className="fixed inset-0 z-30 grid place-items-center overflow-y-auto bg-slate-950/15 px-5 py-20 backdrop-blur-sm">
-          <section
-            aria-labelledby="map-sign-in-title"
-            aria-describedby="map-sign-in-description"
-            className="w-full max-w-sm rounded-xl bg-popover p-6 text-popover-foreground shadow-xl shadow-slate-900/10 ring-1 ring-foreground/10"
-          >
-            <div className="mb-5 flex size-11 items-center justify-center rounded-xl bg-blue-50 text-blue-600">
-              <Route aria-hidden="true" className="size-5" />
-            </div>
-            <h1
-              id="map-sign-in-title"
-              className="text-xl font-semibold tracking-tight"
-            >
-              Your next route starts here
-            </h1>
-            <p
-              id="map-sign-in-description"
-              className="my-2 text-sm leading-6 text-muted-foreground"
-            >
-              Sign in with Google to add your stops, plan your route, and get
-              going.
-            </p>
-            {status === "loading" ? (
-              <p
-                role="status"
-                className="flex min-h-12 items-center justify-center gap-2 rounded-lg border border-border text-sm text-muted-foreground"
-              >
-                <LoaderCircle
-                  aria-hidden="true"
-                  className="size-4 animate-spin motion-reduce:animate-none"
-                />
-                Checking sign-in…
-              </p>
-            ) : (
-              <SignIn />
-            )}
-            <Suspense>
-              <SignInError />
-            </Suspense>
-            <p className="mt-4 text-center text-xs leading-5 text-muted-foreground">
-              New here? Your first sign-in creates your account.
-              <br />
-              No credit card required.
-            </p>
-          </section>
-        </div>
-      )}
       <div className="fixed bottom-5 left-5 z-40 ">
         <Popover>
           <div>

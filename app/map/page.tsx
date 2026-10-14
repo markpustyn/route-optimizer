@@ -6,9 +6,11 @@ import type { RouteRequest, RouteResult } from "@/app/lib/types";
 import SideBar from "../ui/sidebar";
 import RouteMap from "../ui/map";
 import { usePremium } from "@/components/premium-provider";
+import { useMapSignIn } from "@/components/map-account";
 
 export default function Home() {
   const { showUpgrade } = usePremium();
+  const { requestSignIn } = useMapSignIn();
   const [key, setKey] = useState("");
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
@@ -72,6 +74,10 @@ export default function Home() {
       });
 
       if (!response.ok) {
+        if (response.status === 401) {
+          requestSignIn();
+          return;
+        }
         const failure: { error?: string; code?: string } =
           await response.json();
 

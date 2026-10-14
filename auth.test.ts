@@ -49,14 +49,14 @@ test("rejects missing or unverified Google identity before saving", async () => 
 });
 
 test("saves signup and repeat sign-in with an atomic Google-ID upsert", async (t) => {
-  const originalUrl = process.env.NEXT_PUBLIC_DATABASE_URL;
-  process.env.NEXT_PUBLIC_DATABASE_URL =
+  const originalUrl = process.env.DATABASE_URL;
+  process.env.DATABASE_URL =
     "postgresql://test:test@unit-test.neon.tech/test";
   const originalFetch = neonConfig.fetchFunction;
   t.after(() => {
     neonConfig.fetchFunction = originalFetch;
-    if (originalUrl === undefined) delete process.env.NEXT_PUBLIC_DATABASE_URL;
-    else process.env.NEXT_PUBLIC_DATABASE_URL = originalUrl;
+    if (originalUrl === undefined) delete process.env.DATABASE_URL;
+    else process.env.DATABASE_URL = originalUrl;
   });
   const requests: { query: string; params: unknown[] }[] = [];
   neonConfig.fetchFunction = async (
