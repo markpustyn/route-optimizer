@@ -16,7 +16,7 @@ import { PREMIUM_PRICE_LABEL } from "@/lib/billing-plan";
 export const metadata: Metadata = {
   title: "StopNest — Route planning, one stop at a time",
   description:
-    "Plan routes with up to 15 destinations for free. Upgrade to StopNest Premium for up to 50 destinations at $10 USD per month. View driving estimates and navigate with Google Maps.",
+    "Plan routes with up to 25 destinations for free. Upgrade to StopNest Premium for up to 50 destinations at $10 USD per month. View driving estimates and navigate with Google Maps.",
 };
 
 const actionClass =
@@ -78,7 +78,7 @@ export default function Page() {
               </Link>
             </div>
             <p className="mt-4 text-xs leading-5 text-muted-foreground">
-              Start free with 15 destinations per route. Sign in with Google.
+              Start free with 25 destinations per route. Sign in with Google.
             </p>
           </div>
           <div className="mt-10 overflow-hidden rounded-2xl border border-border bg-card sm:mt-12">
@@ -159,7 +159,7 @@ export default function Page() {
                 </p>
                 <p className="mt-6 border-y border-border py-4 text-sm">
                   <strong className="font-semibold">
-                    Up to 15 destinations
+                    Up to 25 destinations
                   </strong>{" "}
                   per route
                 </p>
@@ -260,7 +260,7 @@ export default function Page() {
               {
                 question: "What changes with Premium?",
                 answer:
-                  "Premium increases your destination limit from 15 to 50 per route. Route ordering, driving estimates, text downloads, and Google Maps navigation are included in both plans.",
+                  "Premium increases your destination limit from 25 to 50 per route. Route ordering, driving estimates, text downloads, and Google Maps navigation are included in both plans.",
               },
               {
                 question: "How are my stops ordered?",
@@ -270,7 +270,7 @@ export default function Page() {
               {
                 question: "How do I upgrade?",
                 answer:
-                  "Open the map and sign in with Google. Choose Upgrade to Premium in your account menu, or add more than 15 destinations to open the upgrade prompt.",
+                  "Open the map and sign in with Google. Choose Upgrade to Premium in your account menu, or add more than 25 destinations to open the upgrade prompt.",
               },
             ].map(({ question, answer }) => (
               <details key={question} className="group py-5">

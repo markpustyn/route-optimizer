@@ -14,14 +14,14 @@ const requestFor = (count: number, roundTrip = false) =>
 const user = { email: "test@example.invalid" };
 
 test("signed-out users are blocked before checking premium", async () => {
-  const response = await checkRouteAccess(requestFor(16), null, async () => {
+  const response = await checkRouteAccess(requestFor(26), null, async () => {
     throw new Error("Unexpected lookup");
   });
   assert.equal(response?.status, 401);
 });
 
-test("standard users can optimize 15 destinations without a premium lookup", async () => {
-  const request = requestFor(15);
+test("standard users can optimize 25 destinations without a premium lookup", async () => {
+  const request = requestFor(25);
   assert.equal(
     await checkRouteAccess(request, user, async () => {
       throw new Error("Unexpected lookup");
@@ -30,12 +30,12 @@ test("standard users can optimize 15 destinations without a premium lookup", asy
   );
   assert.equal(
     (await request.json()).destinations.length,
-    15,
+    25,
     "body remains readable by route handler",
   );
 });
 
-for (const count of [16, 50]) {
+for (const count of [26, 50]) {
   test(`${count} destinations require the server-stored premium role`, async () => {
     const response = await checkRouteAccess(
       requestFor(count),
@@ -73,15 +73,15 @@ test("invalid input is left to existing validation", async () => {
 
 test("return to start does not consume a free destination", async () => {
   const response = await checkRouteAccess(
-    requestFor(15, true),
+    requestFor(25, true),
     user,
     async () => {
-      throw new Error("15 destinations plus start and return must stay free");
+      throw new Error("25 destinations plus start and return must stay free");
     },
   );
   assert.equal(response, null);
   const denied = await checkRouteAccess(
-    requestFor(16, true),
+    requestFor(26, true),
     user,
     async () => false,
   );

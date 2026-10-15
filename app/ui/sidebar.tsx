@@ -114,7 +114,7 @@ export default function SideBar({
       // Route planning remains available when browser storage is disabled.
     }
   }, [draftLoaded, start, destinations, roundTrip, reverseDirection]);
-  const maxDestinations = premium ? 50 : 15;
+  const maxDestinations = premium ? 50 : 25;
   const canOptimize =
     start.trim().length > 0 &&
     destinations.length >= 2 &&
@@ -128,7 +128,7 @@ export default function SideBar({
   }
 
   function addDestination() {
-    if (!premium && destinations.length >= 15) {
+    if (!premium && destinations.length >= 25) {
       showUpgrade();
       return;
     }
@@ -147,7 +147,7 @@ export default function SideBar({
   async function optimize(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     if (busy || !canOptimize) return;
-    if (!premium && destinations.length > 15) {
+    if (!premium && destinations.length > 25) {
       showUpgrade();
       return;
     }
