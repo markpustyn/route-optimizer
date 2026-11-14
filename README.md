@@ -1,111 +1,77 @@
-# Waypoint
+# Stop Nest
 
-A simple driving-route planner built from the existing Next.js template. Enter a start and 2–50 destinations (one full address per line), choose time or distance, and optimize. Includes an optional return to start, a route map, ordered stops, estimated totals, per-leg Google Maps navigation, and a text download. The sample fills in ten Sacramento destinations.
+### A little less planning. A lot more going.
 
-## Run
+Stop Nest is a free, easy to use Google Maps route optimizer that helps you plan efficient routes with multiple stops. Simply enter your destinations, optimize your route, and open it directly in Google Maps for navigation.
 
-```sh
-npm install
-npm run dev
-```
+Designed for delivery drivers, field service professionals, property inspectors, and anyone who regularly travels to multiple locations.
 
-## Neon database and Drizzle
+## Features
 
-Set `DATABASE_URL` in `.env.local` and in your hosting provider's server environment to the Postgres connection string from Neon's Connect dialog:
+- **Route Optimization:** Automatically organize multiple destinations into an efficient route.
+- **Google Maps Integration:** Open optimized routes directly in Google Maps.
+- **Multiple Stops:** Plan routes with numerous destinations and navigate them in groups of up to 10 stops.
+- **Address Autocomplete:** Quickly find and add addresses using Google Places.
+- **Custom Starting Point:** Choose where your route begins.
+- **Interactive Map:** Visualize your destinations and optimized route.
+- **Privacy Focused:** Stop Nest does not store your routes or addresses.
+- **No Account Required:** Start planning routes immediately.
 
-```dotenv
-DATABASE_URL=postgresql://USER:PASSWORD@YOUR_HOST.neon.tech/neondb?sslmode=require
-```
+## Built With
 
-Never use a `NEXT_PUBLIC_` prefix for database credentials. The server-only client in `db/client.ts` uses `@neondatabase/serverless` with `drizzle-orm/neon-http`; Drizzle Kit reads the same `DATABASE_URL`. This driver supports the existing individual selects and inserts over HTTP. Interactive callback transactions require a different driver; use Drizzle's batch API for supported atomic batches.
+- Next.js
+- React
+- TypeScript
+- Tailwind CSS
+- Google Maps JavaScript API
+- Google Places API
+- Google Maps Routes Services
+- Vercel
 
-```sh
-npm run db:check     # Read-only connection and table-existence check
-npm run db:generate # Generate SQL after changing drizzle/schema.ts
-npm run db:migrate  # Apply reviewed migrations to the configured database
-npm run db:studio   # Open Drizzle's database browser
-```
+## How It Works
 
-Google authentication uses Auth.js JWT cookies and saves verified Google profiles to `users` (SQL table `user`). The `signIn` callback in `auth.ts` uses `lib/google-user.ts` to insert or update name, email, and image by a unique Google account ID. Repeat sign-ins preserve `createdAt` and `savedAddress`. A failed database save returns to the map with an error instead of completing sign-in. Existing sessions need a new sign-in to create a database profile. Route saving is not connected. Schema migrations do not copy records from Supabase: moving existing records requires a separate data transfer.
+1. **Add Destinations:** Enter the addresses you need to visit.
+2. **Set Your Starting Point:** Choose where you want to begin.
+3. **Optimize Your Route:** Let Stop Nest organize your stops into an efficient order.
+4. **Start Navigating:** Open your optimized route in Google Maps and begin driving.
 
-## Google Maps setup
+For larger routes, Stop Nest divides destinations into manageable navigation segments.
 
-- Existing `NEXT_PUBLIC_GOOGLE_MAPS_API_KEY`: enable Maps JavaScript API and restrict this browser key to your website origins.
-- Add `GOOGLE_MAPS_SERVER_API_KEY` to `.env.local`: enable Routes API and Geocoding API with billing and restrict this separate server key to those APIs (and server IPs where applicable). Never prefix the server key with `NEXT_PUBLIC_`.
-- Optional `NEXT_PUBLIC_GOOGLE_MAPS_MAP_ID`; otherwise the map uses `DEMO_MAP_ID`.
-- Routing requires the separate server key; the publicly exposed browser key is never used for server routing.
+## Getting Started
 
-The affordable default geocodes each address once per optimization and uses a local geographic-distance matrix with multi-start nearest-neighbor and 2-opt to order stops. Google then supplies actual driving directions, geometry, distance and estimated duration. Geographic ordering does not optimize road travel time or road distance: rivers, bridges and one-way streets can make the geographic order worse. Savings percentages are hidden because no road baseline is purchased. Google results are not persisted. Both metric inputs use geographic ordering in this mode. Estimates exclude live traffic.
+Clone the repository and install dependencies.
 
-At 50 destinations plus the start, the default purchases 51 geocodes and five Essentials Compute Routes calls, approximately $0.28 per optimization at initial paid-tier global USD prices, before monthly free allowances. Directions are split into at most 10 intermediate stops to retain Essentials pricing. Shared endpoints preserve all connecting legs.
+`npm install`
 
-For explicit road-based optimization, set `ROUTE_OPTIMIZATION_MODE=road-matrix` in the server environment. This purchases 2,601 matrix elements at maximum size: approximately $13.03 including five route requests, before free allowances. Batching reduces HTTP requests, not billable elements. There is no automatic paid-matrix fallback when geocoding fails. The old matrix implementation could explain a $40 day after just a few large runs once free allowances were exhausted; confirm the actual SKU and element usage in Cloud Billing, grouped by SKU and filtered to the relevant date.
+Configure the required Google Maps API credentials in your local environment.
 
-Set daily quotas for Geocoding API, Compute Routes and Compute Route Matrix in Google Cloud Console, and restrict both API keys. A budget alert alone does not cap spending. Deployment-level rate limits are also needed for a public endpoint; this change does not impose a global daily spending cap. Enable Geocoding API before deploying this change, then restart/redeploy the app. Other map loads and Places autocomplete usage remain separately billable.
+Start the development server:
 
-References: [Route matrix](https://developers.google.com/maps/documentation/routes/compute_route_matrix), [Compute routes](https://developers.google.com/maps/documentation/routes/reference/rest/v2/TopLevel/computeRoutes).
+`npm run dev`
 
-## Google sign-in
+Open `http://localhost:3000` to view the application.
 
-The public homepage leads to `/map`. Signed-out visitors can enter and edit their route immediately. Clicking Optimize checks authentication on the server and opens a dismissible Google sign-in dialog when needed. First-time Google sign-in creates the account; returning users sign in to their existing account. A shadcn avatar in the bottom-left corner opens sign-in or account/sign-out controls. The map has no account header or logo. Auth.js returns to `/map` after sign-in or sign-out, and `/login` redirects there for old links. The proxy returns JSON 401 for signed-out requests to `/api/optimize`. After signing in, click Optimize again to run the route.
+## Use Cases
 
-Configure `AUTH_SECRET`, `AUTH_GOOGLE_ID`, and `AUTH_GOOGLE_SECRET` in the server environment. Register `http://localhost:3000/api/auth/callback/google` for local development and `https://YOUR_DOMAIN/api/auth/callback/google` for production in the Google OAuth client's authorized redirect URIs. These OAuth credentials are separate from the Maps API key. Auth.js uses an encrypted JWT session cookie and persists verified Google profiles in Neon. The route draft is kept in tab-scoped sessionStorage so stops and route options survive the Google redirect. If browser storage is blocked, the planner still works but the draft cannot survive a full-page redirect. Complete a real Google sign-in on your configured deployment to validate the OAuth consent and callback settings.
+Stop Nest is useful for:
 
-## Verify
+- Delivery and courier drivers
+- Property inspectors and appraisers
+- Lawn care and pool service companies
+- Real estate professionals
+- Field technicians
+- Road trips and personal errands
 
-```sh
-npm test
-npm run lint
-npm run build
-```
+## Privacy
 
-Tests cover ten-stop optimization, 24-stop asymmetric costs, round trips, API validation, and a mocked Google integration. Live Google routing requires enabled APIs and valid credentials.
+Stop Nest does not require registration and does not store user routes or destination history on its servers. Google Maps services process location and routing requests to provide mapping functionality.
 
-## Contact form
+## License
 
-The footer Contact button opens the shared UI dialog and submits to Formspree. Add your form ID to `.env.local`:
+All rights reserved.
 
-```dotenv
-NEXT_PUBLIC_FORMSPREE_FORM_ID=your_form_id
-```
+---
 
-Use the ID from your Formspree integration endpoint (`https://formspree.io/f/your_form_id`). Restart the dev server after adding it; for production, set the variable in your hosting environment and rebuild. Until configured, the dialog opens but sending is disabled.
+Built to make planning multiple stops simple, efficient, and accessible.
 
-## Resend unsubscribe
-
-The homepage footer links to `/unsubscribe`. Its form updates a Resend contact by email with `unsubscribed: true`, opting them out of all Resend Broadcasts. Set the server-only `RESEND_API_KEY` in `.env.local` and your hosting environment using a key with access to Contacts, then restart the server. Failed updates display a retry message; missing contacts receive the same confirmation to keep contact membership private.
-
-Link to `https://YOUR_DOMAIN/unsubscribe` from externally managed emails. There is currently no email sender or template in this repository. For Resend Broadcasts and Automations, use `<a href="{{{RESEND_UNSUBSCRIBE_URL}}}">Unsubscribe</a>` in the email template for Resend's automatic recipient-specific unsubscribe handling. This site's form is a separate manual opt-out page, not a one-click List-Unsubscribe endpoint. Contact preferences do not automatically suppress emails sent directly through the transactional API.
-
-References: [Update Contact](https://resend.com/docs/api-reference/contacts/update-contact), [Unsubscribe links](https://resend.com/docs/knowledge-base/should-i-add-an-unsubscribe-link).
-
-Validation: `npx tsx --test app/unsubscribe/actions.test.ts`.
-
-## Stripe Premium billing
-
-The Premium button opens Stripe Checkout for product `prod_VNMOo2og1ESzk1`, price `price_1UMbgBBMi1VZB10HaSdaVDSD` ($10 USD/month). The existing key and product are **test mode**. No real payments are enabled. The account menu includes Manage billing, with cancellation at the end of the paid month.
-
-Server environment:
-
-```dotenv
-STRIPE_SECRET_KEY=your_stripe_secret_key
-STRIPE_WEBHOOK_SECRET=your_endpoint_signing_secret
-STRIPE_PORTAL_CONFIGURATION_ID=your_billing_portal_configuration_id
-APP_URL=https://your-public-domain.example
-```
-
-The local secret key was retained and a test portal configuration was created. Never prefix Stripe secrets with `NEXT_PUBLIC_`. For localhost, set `APP_URL=http://localhost:3000` or omit it. On deployment, set APP_URL explicitly to the public HTTPS origin. Configure all these server variables in the hosting environment too.
-
-Register `https://YOUR_DOMAIN/api/stripe/webhook` in Stripe with these events:
-
-- `checkout.session.completed`, `checkout.session.async_payment_succeeded`, `checkout.session.async_payment_failed`
-- `customer.subscription.created`, `customer.subscription.updated`, `customer.subscription.deleted`, `customer.subscription.paused`, `customer.subscription.resumed`
-- `invoice.paid`, `invoice.payment_failed`, `invoice.payment_action_required`, `invoice.voided`, `invoice.marked_uncollectible`
-
-Copy that endpoint's signing secret into `STRIPE_WEBHOOK_SECRET`. For local testing, run `stripe listen --forward-to localhost:3000/api/stripe/webhook` and use the signing secret printed by the Stripe CLI. Restart the development server after changing environment variables. A public webhook endpoint has not been registered by this implementation; renewals and cancellation synchronization require this setup.
-
-Apply schema changes with `npm run db:migrate`. Google sign-in stores a stable Google account ID in new sessions; sign out and back in if using an older session. Checkout requires an authenticated database user, uses a server-selected price, and reuses open checkout sessions. The return page verifies session ownership and payment with Stripe; a success URL alone never grants Premium. Signed webhooks read current subscription state to tolerate duplicate and out-of-order deliveries. Active subscriptions with paid invoices unlock 50 destinations; other statuses revert to the standard limit of 25 destinations, excluding the starting point and return to start. Stripe-managed access expires at the paid period end even if webhook delivery stops. Manually granted Premium accounts without a Stripe customer remain supported.
-
-Validation: `npm run test:billing`, `npm run test:auth`, `npm run test:premium`, `npm test`, and `npm run build`. To test the hosted payment flow, sign in, choose Upgrade, and use Stripe test card `4242 4242 4242 4242`, a future expiry, and any three-digit CVC. Confirm 50 destinations unlock, then verify cancellation through Manage billing and the signed webhook. No end-to-end card payment has been performed automatically.
-
-Before accepting real payments, replace the plan IDs in `lib/billing-plan.ts` with the corresponding live product/price, configure a live secret key, live portal, and live webhook signing secret, and verify the complete flow. Test and live Stripe objects are separate.
+Add a clear launch call to actionClarify route optimization limitations
